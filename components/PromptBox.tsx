@@ -110,49 +110,107 @@ export default function PromptBox() {
   const tryAutomation = async (promptText: string): Promise<string | null> => {
     const lowerPrompt = promptText.toLowerCase();
     
-    // Detect task type based on keywords
-    let taskType = null;
+    // Detect task type and integration based on keywords
     let integration = null;
+    let action = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const extractedData: Record<string, any> = {};
     
-    if (lowerPrompt.includes('email') || lowerPrompt.includes('send')) {
-      taskType = 'email';
+    // Email detection
+    if (lowerPrompt.includes('email') || lowerPrompt.includes('send email')) {
       integration = 'email';
-    } else if (lowerPrompt.includes('slack') || lowerPrompt.includes('message') || lowerPrompt.includes('notify')) {
-      taskType = 'slack';
+      action = 'send';
+      
+      // Try to extract recipient, subject from the prompt
+      const emailMatch = lowerPrompt.match(/to\s+([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+      if (emailMatch) {
+        extractedData.recipient = emailMatch[1];
+      } else {
+        extractedData.recipient = 'team@example.com';
+      }
+      
+      // Extract subject if mentioned
+      const subjectMatch = lowerPrompt.match(/about\s+(.+)/);
+      if (subjectMatch) {
+        extractedData.subject = subjectMatch[1].trim();
+      } else {
+        extractedData.subject = 'Automated notification';
+      }
+      
+      extractedData.body = promptText;
+    } 
+    // Slack detection
+    else if (lowerPrompt.includes('slack') || lowerPrompt.includes('post to slack') || 
+             (lowerPrompt.includes('notify') && lowerPrompt.includes('team'))) {
       integration = 'slack';
-    } else if (lowerPrompt.includes('crm') || lowerPrompt.includes('contact') || lowerPrompt.includes('customer')) {
-      taskType = 'crm';
+      action = 'post_message';
+      
+      // Extract channel if mentioned
+      const channelMatch = lowerPrompt.match(/#([a-z0-9-]+)/);
+      if (channelMatch) {
+        extractedData.channel = '#' + channelMatch[1];
+      } else {
+        extractedData.channel = '#general';
+      }
+      
+      // Extract message
+      const aboutMatch = lowerPrompt.match(/about\s+(.+)/);
+      if (aboutMatch) {
+        extractedData.message = aboutMatch[1].trim();
+      } else {
+        extractedData.message = promptText;
+      }
+    }
+    // CRM detection
+    else if (lowerPrompt.includes('crm') || lowerPrompt.includes('contact') || 
+             lowerPrompt.includes('customer') || lowerPrompt.includes('update contact')) {
       integration = 'crm';
+      action = 'update_contact';
+      
+      extractedData.entity_type = 'contact';
+      
+      // Try to extract contact name
+      const nameMatch = lowerPrompt.match(/contact\s+(?:for\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
+      if (nameMatch) {
+        extractedData.contact_name = nameMatch[1];
+      }
+      
+      extractedData.data = {
+        prompt: promptText,
+        timestamp: new Date().toISOString()
+      };
     }
     
-    if (!taskType || !integration) {
+    if (!integration || !action) {
       return null;
     }
     
     try {
-      // Trigger automation via backend API
-      const response = await fetch('/api/automate', {
+      // Call the integration endpoint directly
+      const response = await fetch(`/api/integrations/${integration}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          task: taskType,
-          priority: 'normal',
-          prompt: promptText,
+          action: action,
+          ...extractedData,
         }),
       });
       
       if (response.ok) {
         const data = await response.json();
-        return `${integration.toUpperCase()} automation (Task ID: ${data.task_id})`;
+        const mode = data.details?.mode || 'demo';
+        return `${integration.toUpperCase()} automation triggered ${mode === 'production' ? '(LIVE)' : '(DEMO)'} - ${data.message}`;
+      } else {
+        const errorData = await response.json();
+        return `${integration.toUpperCase()} automation failed: ${errorData.message}`;
       }
     } catch (error) {
       // Silent fail - automation is optional
       console.error('Automation trigger failed:', error);
+      return null;
     }
-    
-    return null;
   };
 
   const handleClear = () => {
