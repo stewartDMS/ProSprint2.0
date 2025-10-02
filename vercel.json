@@ -15,6 +15,18 @@
     {
       "source": "/api/trigger",
       "destination": "/api/trigger.py"
+    },
+    {
+      "source": "/api/integrations/crm",
+      "destination": "/api/integrations/crm.py"
+    },
+    {
+      "source": "/api/integrations/email",
+      "destination": "/api/integrations/email.py"
+    },
+    {
+      "source": "/api/integrations/slack",
+      "destination": "/api/integrations/slack.py"
     }
   ]
 }
