@@ -239,7 +239,9 @@ ProSprint2.0/
 ├── pages/
 │   ├── index.tsx              # Main dashboard page (React + TypeScript)
 │   └── api/
-│       └── automate.py        # Python API endpoint for automation
+│       ├── automate.py        # Python API endpoint for automation
+│       ├── report.py          # Python API endpoint for reports
+│       └── trigger.py         # Python API endpoint for triggers
 ├── package.json               # Node.js dependencies and scripts
 ├── requirements.txt           # Python dependencies
 ├── vercel.json                # Vercel deployment configuration
@@ -284,20 +286,49 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-The Python API endpoint is available at [http://localhost:3000/api/automate](http://localhost:3000/api/automate).
+The Python API endpoints are available at:
+- [http://localhost:3000/api/automate](http://localhost:3000/api/automate)
+- [http://localhost:3000/api/report](http://localhost:3000/api/report)
+- [http://localhost:3000/api/trigger](http://localhost:3000/api/trigger)
 
 ### Testing the API
 
-**GET Request** (Check status):
+**Automation API**:
 ```bash
+# Check automation status
 curl http://localhost:3000/api/automate
-```
 
-**POST Request** (Send automation task):
-```bash
+# Send automation task
 curl -X POST http://localhost:3000/api/automate \
   -H "Content-Type: application/json" \
   -d '{"task": "sample_automation", "priority": "high"}'
+```
+
+**Reports API**:
+```bash
+# Get sample report
+curl http://localhost:3000/api/report
+
+# Generate custom report
+curl -X POST http://localhost:3000/api/report \
+  -H "Content-Type: application/json" \
+  -d '{"report_type": "analytics", "date_range": "last_30_days"}'
+```
+
+**Triggers API**:
+```bash
+# Get active triggers
+curl http://localhost:3000/api/trigger
+
+# Create new trigger
+curl -X POST http://localhost:3000/api/trigger \
+  -H "Content-Type: application/json" \
+  -d '{"action": "create", "trigger_type": "webhook", "name": "New Lead Alert"}'
+
+# Test a trigger
+curl -X POST http://localhost:3000/api/trigger \
+  -H "Content-Type: application/json" \
+  -d '{"action": "test", "trigger_id": "trg_001"}'
 ```
 
 ## Deployment to Vercel
@@ -346,7 +377,9 @@ If your application needs environment variables, add them in:
 
 ## API Endpoints
 
-### GET /api/automate
+### Automation API - /api/automate
+
+#### GET /api/automate
 Returns the current status of the automation system.
 
 **Response**:
@@ -359,11 +392,18 @@ Returns the current status of the automation system.
     "Task Automation",
     "Workflow Management",
     "Business Process Optimization"
-  ]
+  ],
+  "active_workflows": 3,
+  "completed_tasks_today": 47,
+  "integration_status": {
+    "crm": "connected",
+    "email": "connected",
+    "slack": "ready"
+  }
 }
 ```
 
-### POST /api/automate
+#### POST /api/automate
 Submits an automation task for processing.
 
 **Request Body**:
@@ -377,15 +417,203 @@ Submits an automation task for processing.
 **Response**:
 ```json
 {
-  "message": "Automation task received",
+  "message": "Automation task received and processed",
   "status": "processing",
   "timestamp": "2024-01-01T12:00:00.000000",
-  "received_data": {
-    "task": "sample_automation",
-    "priority": "high"
+  "task_id": "task_1234567890.123",
+  "task_type": "sample_automation",
+  "priority": "high",
+  "estimated_completion": "2-5 minutes",
+  "automation_result": {
+    "actions_scheduled": 4,
+    "workflow_initiated": true
   }
 }
 ```
+
+**Integration Points**:
+- CRM: Update customer records, sync contacts
+- Email: Send automated notifications, campaign management
+- Slack: Post updates, notify teams
+- External APIs: Webhook triggers, data sync
+
+---
+
+### Reports API - /api/report
+
+#### GET /api/report
+Generates and returns a sample business report with key metrics.
+
+**Response**:
+```json
+{
+  "message": "Report generated successfully",
+  "status": "success",
+  "timestamp": "2024-01-01T12:00:00.000000",
+  "report": {
+    "title": "Business Performance Summary",
+    "period": {
+      "start": "2023-12-01",
+      "end": "2024-01-01"
+    },
+    "metrics": {
+      "total_tasks": 1247,
+      "completed_tasks": 1089,
+      "completion_rate": 87.3,
+      "active_workflows": 23
+    },
+    "top_automations": [
+      {
+        "name": "Customer Onboarding",
+        "executions": 45,
+        "success_rate": 96.7
+      }
+    ]
+  }
+}
+```
+
+#### POST /api/report
+Generates a custom report based on specified parameters.
+
+**Request Body**:
+```json
+{
+  "report_type": "analytics",
+  "date_range": "last_30_days"
+}
+```
+
+**Response**:
+```json
+{
+  "message": "Custom analytics report generated",
+  "status": "success",
+  "timestamp": "2024-01-01T12:00:00.000000",
+  "report_type": "analytics",
+  "date_range": "last_30_days",
+  "report": {
+    "title": "Analytics Report",
+    "data": {
+      "user_engagement": "High",
+      "efficiency_score": 92.5
+    }
+  }
+}
+```
+
+**Integration Points**:
+- CRM: Pull customer data, conversion rates
+- Analytics: Track user engagement, performance metrics
+- Document Service: Generate PDF reports, export to cloud storage
+- External APIs: Third-party data integration
+
+**Supported Report Types**:
+- `summary` - High-level business metrics
+- `detailed` - Comprehensive breakdown of activities
+- `analytics` - User engagement and performance analysis
+
+---
+
+### Triggers API - /api/trigger
+
+#### GET /api/trigger
+Retrieves the list of active automation triggers.
+
+**Response**:
+```json
+{
+  "message": "Active triggers retrieved successfully",
+  "status": "success",
+  "timestamp": "2024-01-01T12:00:00.000000",
+  "trigger_count": 5,
+  "triggers": [
+    {
+      "id": "trg_001",
+      "name": "New Customer Onboarding",
+      "type": "crm_event",
+      "event": "customer.created",
+      "status": "active",
+      "integration": "CRM"
+    }
+  ]
+}
+```
+
+#### POST /api/trigger
+Creates or updates an automation trigger.
+
+**Request Body** (Create):
+```json
+{
+  "action": "create",
+  "trigger_type": "webhook",
+  "name": "High-Value Lead Alert",
+  "event": "lead.qualified"
+}
+```
+
+**Request Body** (Update):
+```json
+{
+  "action": "update",
+  "trigger_id": "trg_001",
+  "updates": {
+    "status": "active"
+  }
+}
+```
+
+**Request Body** (Test):
+```json
+{
+  "action": "test",
+  "trigger_id": "trg_001"
+}
+```
+
+**Response**:
+```json
+{
+  "message": "Trigger create processed successfully",
+  "status": "success",
+  "timestamp": "2024-01-01T12:00:00.000000",
+  "action": "create",
+  "trigger_type": "webhook",
+  "result": {
+    "trigger_id": "trg_1234567890",
+    "status": "created",
+    "integration_steps": [
+      {
+        "integration": "Webhook_Service",
+        "action": "register_trigger",
+        "status": "completed"
+      }
+    ]
+  }
+}
+```
+
+**Integration Points**:
+- Webhook Service: External system webhooks
+- Scheduler: Cron-based time triggers
+- Event Bus: Real-time event subscriptions
+- CRM: Customer lifecycle events
+- Email: Notification on trigger activation
+- Slack: Alert team when triggers fire
+
+**Supported Trigger Types**:
+- `webhook` - HTTP webhook endpoints
+- `scheduled` - Cron-based time triggers
+- `event` - Event-driven triggers
+- `crm_event` - CRM lifecycle events
+
+**Supported Actions**:
+- `create` - Create a new trigger
+- `update` - Update existing trigger
+- `enable` - Enable a trigger
+- `disable` - Disable a trigger
+- `test` - Test trigger execution
 
 ## Technology Stack
 
