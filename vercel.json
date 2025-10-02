@@ -7,6 +7,14 @@
     {
       "source": "/api/automate",
       "destination": "/api/automate.py"
+    },
+    {
+      "source": "/api/report",
+      "destination": "/api/report.py"
+    },
+    {
+      "source": "/api/trigger",
+      "destination": "/api/trigger.py"
     }
   ]
 }
