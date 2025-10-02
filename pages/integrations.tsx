@@ -26,15 +26,78 @@ interface AutomationAction {
 export default function Integrations() {
   const [integrations, setIntegrations] = useState<Integration[]>([
     {
+      id: 'hubspot',
+      name: 'HubSpot',
+      description: 'CRM, marketing automation, and sales',
+      status: 'disconnected',
+      icon: '🧲',
+    },
+    {
+      id: 'salesforce',
+      name: 'Salesforce',
+      description: 'Cloud-based CRM platform',
+      status: 'disconnected',
+      icon: '☁️',
+    },
+    {
+      id: 'google-drive',
+      name: 'Google Drive',
+      description: 'Cloud storage and document management',
+      status: 'disconnected',
+      icon: '📁',
+    },
+    {
+      id: 'xero',
+      name: 'Xero',
+      description: 'Accounting and invoicing software',
+      status: 'disconnected',
+      icon: '💰',
+    },
+    {
+      id: 'notion',
+      name: 'Notion',
+      description: 'Workspace for notes, docs, and projects',
+      status: 'disconnected',
+      icon: '📝',
+    },
+    {
+      id: 'asana',
+      name: 'Asana',
+      description: 'Project and task management',
+      status: 'disconnected',
+      icon: '✅',
+    },
+    {
+      id: 'jira',
+      name: 'Jira',
+      description: 'Issue tracking and agile project management',
+      status: 'disconnected',
+      icon: '🎯',
+    },
+    {
+      id: 'gmail',
+      name: 'Gmail',
+      description: 'Send and manage emails with Google',
+      status: 'disconnected',
+      icon: '✉️',
+    },
+    {
+      id: 'outlook',
+      name: 'Outlook',
+      description: 'Microsoft email and calendar service',
+      status: 'disconnected',
+      icon: '📬',
+    },
+    {
       id: 'crm',
-      name: 'CRM',
+      name: 'CRM (Legacy)',
       description: 'Manage contacts, deals, and companies',
       status: 'disconnected',
       icon: '👥',
     },
     {
       id: 'email',
-      name: 'Email',
+      name: 'Email (Legacy)',
       description: 'Send emails and manage campaigns',
       status: 'disconnected',
       icon: '📧',
@@ -86,6 +149,27 @@ export default function Integrations() {
   ];
 
   useEffect(() => {
+    // Check for OAuth callback messages in URL
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get('connected');
+    const error = params.get('error');
+    
+    if (connected) {
+      setMessage({
+        type: 'success',
+        text: `${connected.toUpperCase()} connected successfully!`,
+      });
+      // Clean up URL
+      window.history.replaceState({}, '', '/integrations');
+    } else if (error) {
+      setMessage({
+        type: 'error',
+        text: `Failed to connect ${error.toUpperCase()}. Please try again.`,
+      });
+      // Clean up URL
+      window.history.replaceState({}, '', '/integrations');
+    }
+    
     // Fetch integration statuses on mount
     const fetchStatuses = async () => {
       const updatedIntegrations = await Promise.all(
@@ -123,6 +207,14 @@ export default function Integrations() {
       const response = await fetch(`/api/integrations/${integrationId}?action=connect`);
       if (response.ok) {
         const data = await response.json();
+        
+        // Check if OAuth redirect is required
+        if (data.status === 'redirect' && data.auth_url) {
+          // Redirect to OAuth authorization page
+          window.location.href = data.auth_url;
+          return;
+        }
+        
         setIntegrations(
           integrations.map((integration) =>
             integration.id === integrationId
