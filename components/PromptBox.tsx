@@ -30,13 +30,11 @@ export default function PromptBox() {
     setError(null);
 
     try {
-      // Sample implementation - In production, you'd use actual OpenAI API
-      // This demonstrates the structure for calling the API
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      // Call our secure API route which handles OpenAI requests server-side
+      const response = await fetch('/api/openai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY || 'YOUR_API_KEY'}`,
         },
         body: JSON.stringify({
           model: 'gpt-3.5-turbo',
@@ -49,12 +47,19 @@ export default function PromptBox() {
         }),
       });
 
-      if (!response.ok) {
-        // For demo purposes, fall back to mock response
-        throw new Error('API key not configured - using demo mode');
+      const data = await response.json();
+
+      // Check if we're in demo mode
+      if ('demoMode' in data && data.demoMode) {
+        throw new Error('demo_mode');
       }
 
-      const data = await response.json();
+      // Check for errors
+      if ('error' in data) {
+        throw new Error(data.error);
+      }
+
+      // Success - display AI response
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -63,16 +68,23 @@ export default function PromptBox() {
       };
 
       setMessages([...messages, userMessage, assistantMessage]);
-    } catch {
+      setError(null);
+    } catch (err) {
       // Demo fallback response
       const demoMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `Demo response: I received your message "${prompt}". To use real AI responses, please configure your OpenAI API key in the environment variables (NEXT_PUBLIC_OPENAI_API_KEY).`,
+        content: `Demo response: I received your message "${prompt}". To use real AI responses, please configure your OpenAI API key in .env.local (OPENAI_API_KEY).`,
         timestamp: new Date(),
       };
       setMessages([...messages, userMessage, demoMessage]);
-      setError('Running in demo mode. Configure NEXT_PUBLIC_OPENAI_API_KEY for real AI responses.');
+      
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      if (errorMessage === 'demo_mode') {
+        setError('Running in demo mode. Add OPENAI_API_KEY to .env.local for real AI responses.');
+      } else {
+        setError(`Error: ${errorMessage}. Running in demo mode.`);
+      }
     } finally {
       setLoading(false);
     }
