@@ -6,7 +6,7 @@ interface ApiResponse {
   status: string;
   timestamp: string;
   features?: string[];
-  received_data?: any;
+  received_data?: Record<string, unknown>;
 }
 
 export default function Home() {
