@@ -120,7 +120,7 @@ export default function Integrations() {
     setMessage(null);
 
     try {
-      const response = await fetch(`/api/integrations/${integrationId}`);
+      const response = await fetch(`/api/integrations/${integrationId}?action=connect`);
       if (response.ok) {
         const data = await response.json();
         setIntegrations(
@@ -130,33 +130,57 @@ export default function Integrations() {
               : integration
           )
         );
+        
+        const mode = data.configured ? 'PRODUCTION' : 'DEMO';
+        const modeMessage = data.configured 
+          ? 'with real credentials' 
+          : 'in demo mode (configure API keys in .env.local for real integration)';
+        
         setMessage({
           type: 'success',
-          text: `${integrationId.toUpperCase()} connected successfully!`,
+          text: `${integrationId.toUpperCase()} connected successfully ${modeMessage} [${mode}]`,
         });
       } else {
-        throw new Error('Failed to connect');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to connect');
       }
-    } catch {
+    } catch (error) {
       setMessage({
         type: 'error',
-        text: `Failed to connect ${integrationId.toUpperCase()}. Please try again.`,
+        text: `Failed to connect ${integrationId.toUpperCase()}: ${error instanceof Error ? error.message : 'Unknown error'}`,
       });
     } finally {
       setLoading(null);
     }
   };
 
-  const handleDisconnect = (integrationId: string) => {
-    setIntegrations(
-      integrations.map((integration) =>
-        integration.id === integrationId ? { ...integration, status: 'disconnected' } : integration
-      )
-    );
-    setMessage({
-      type: 'success',
-      text: `${integrationId.toUpperCase()} disconnected successfully!`,
-    });
+  const handleDisconnect = async (integrationId: string) => {
+    setLoading(integrationId);
+    setMessage(null);
+
+    try {
+      const response = await fetch(`/api/integrations/${integrationId}?action=disconnect`);
+      if (response.ok) {
+        setIntegrations(
+          integrations.map((integration) =>
+            integration.id === integrationId ? { ...integration, status: 'disconnected' } : integration
+          )
+        );
+        setMessage({
+          type: 'success',
+          text: `${integrationId.toUpperCase()} disconnected successfully!`,
+        });
+      } else {
+        throw new Error('Failed to disconnect');
+      }
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: `Failed to disconnect ${integrationId.toUpperCase()}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
+    } finally {
+      setLoading(null);
+    }
   };
 
   const handleRunAutomation = async () => {
@@ -182,18 +206,22 @@ export default function Integrations() {
 
       if (response.ok) {
         const data = await response.json();
+        const mode = data.details?.mode || 'unknown';
+        const modeLabel = mode === 'production' ? '[LIVE]' : '[DEMO]';
+        
         setMessage({
           type: 'success',
-          text: `Automation executed successfully! ${data.message}`,
+          text: `${modeLabel} Automation executed successfully! ${data.message}`,
         });
         setAutomationInputs({});
       } else {
-        throw new Error('Failed to execute automation');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to execute automation');
       }
-    } catch {
+    } catch (error) {
       setMessage({
         type: 'error',
-        text: 'Failed to execute automation. Please try again.',
+        text: `Failed to execute automation: ${error instanceof Error ? error.message : 'Unknown error'}`,
       });
     } finally {
       setLoading(null);
@@ -281,10 +309,11 @@ export default function Integrations() {
                       {integration.status === 'connected' ? (
                         <button
                           onClick={() => handleDisconnect(integration.id)}
+                          disabled={loading === integration.id}
                           style={styles.buttonSecondary}
                           aria-label={`Disconnect ${integration.name}`}
                         >
-                          Disconnect
+                          {loading === integration.id ? 'Disconnecting...' : 'Disconnect'}
                         </button>
                       ) : (
                         <button

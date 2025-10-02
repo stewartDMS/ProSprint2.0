@@ -98,8 +98,8 @@ pip install -r requirements.txt
 
 3. Configure your environment:
 ```bash
-cp .env.example .env
-# Edit .env and add your API keys
+cp .env.example .env.local
+# Edit .env.local and add your API keys (see Integration Setup below)
 ```
 
 4. Install ProSprint AI:
@@ -220,6 +220,229 @@ prosprint/
 4. **Approval**: You approve or cancel the execution
 5. **Execution**: Actions are executed across integrated systems
 6. **Logging**: All activity is logged for audit trail
+
+## Integration Setup
+
+ProSprint 2.0 supports real integrations with external services. Configure API keys and credentials in `.env.local` to enable production mode. Without configuration, integrations run in demo mode with simulated responses.
+
+### Configuring Integrations
+
+Create a `.env.local` file in the project root with your credentials:
+
+```bash
+# OpenAI API (required for AI features)
+OPENAI_API_KEY=your_openai_api_key_here
+
+# CRM Integration (optional)
+CRM_API_KEY=your_crm_api_key
+CRM_API_URL=https://api.yourcrm.com/v1
+
+# Email/SMTP Integration (optional)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+
+# Slack Integration (optional)
+SLACK_TOKEN=xoxb-your-slack-bot-token
+SLACK_CHANNEL=#general
+```
+
+### Integration Details
+
+#### 1. CRM Integration
+
+**Demo Mode** (default):
+- Simulates CRM operations without external API calls
+- Returns mock responses for testing
+
+**Production Mode** (with API keys):
+- Connects to real CRM system (Salesforce, HubSpot, etc.)
+- Updates contacts, deals, and companies
+- Syncs data in real-time
+
+**Setup Steps**:
+1. Obtain API key from your CRM provider
+2. Add `CRM_API_KEY` and `CRM_API_URL` to `.env.local`
+3. Restart the application
+4. Test connection on Integrations page
+
+**Example API Implementation** (uncomment in `/pages/api/integrations/crm.py`):
+```python
+import requests
+api_key = os.getenv('CRM_API_KEY', '')
+api_url = os.getenv('CRM_API_URL', '')
+response = requests.post(
+    f"{api_url}/contacts",
+    headers={"Authorization": f"Bearer {api_key}"},
+    json=data
+)
+```
+
+#### 2. Email Integration
+
+**Demo Mode** (default):
+- Simulates email sending without actual delivery
+- Useful for testing workflows
+
+**Production Mode** (with SMTP credentials):
+- Sends real emails via SMTP
+- Supports HTML and plain text
+- Attachment handling
+
+**Setup Steps**:
+1. For Gmail: Enable 2FA and create an [App Password](https://support.google.com/accounts/answer/185833)
+2. Add SMTP credentials to `.env.local`:
+   - `SMTP_HOST`: Your SMTP server (e.g., smtp.gmail.com)
+   - `SMTP_PORT`: Usually 587 for TLS
+   - `SMTP_USER`: Your email address
+   - `SMTP_PASSWORD`: Your password or app password
+3. Restart the application
+4. Test by sending a test email from Integrations page
+
+**Example API Implementation** (uncomment in `/pages/api/integrations/email.py`):
+```python
+import smtplib
+from email.mime.text import MIMEText
+
+msg = MIMEText(body, 'plain')
+msg['From'] = smtp_user
+msg['To'] = recipient
+msg['Subject'] = subject
+
+with smtplib.SMTP(smtp_host, smtp_port) as server:
+    server.starttls()
+    server.login(smtp_user, smtp_password)
+    server.send_message(msg)
+```
+
+#### 3. Slack Integration
+
+**Demo Mode** (default):
+- Simulates message posting
+- Returns mock message IDs and permalinks
+
+**Production Mode** (with bot token):
+- Posts real messages to Slack channels
+- Supports rich formatting, threads, and files
+- Real-time notifications
+
+**Setup Steps**:
+1. Create a Slack App at [api.slack.com/apps](https://api.slack.com/apps)
+2. Add Bot Token Scopes:
+   - `chat:write` - Post messages
+   - `chat:write.public` - Post to public channels
+   - `channels:read` - List channels
+3. Install app to workspace
+4. Copy Bot User OAuth Token (starts with `xoxb-`)
+5. Add to `.env.local`:
+   ```
+   SLACK_TOKEN=xoxb-your-bot-token
+   SLACK_CHANNEL=#general
+   ```
+6. Restart the application
+7. Test by posting a message from Integrations page
+
+**Example API Implementation** (uncomment in `/pages/api/integrations/slack.py`):
+```python
+import requests
+
+response = requests.post(
+    'https://slack.com/api/chat.postMessage',
+    headers={
+        'Authorization': f'Bearer {slack_token}',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'channel': channel,
+        'text': message
+    }
+)
+```
+
+### Using Integrations
+
+#### From the Integrations Page
+
+1. Navigate to `/integrations` in your browser
+2. Click "Connect" on any integration
+   - Shows **[DEMO]** if no credentials configured
+   - Shows **[PRODUCTION]** if credentials are configured
+3. Select an integration and fill in automation parameters
+4. Click "Run Automation" to execute
+5. View results with success/error feedback
+
+#### From the AI Assistant (PromptBox)
+
+The AI Assistant automatically detects and triggers integrations:
+
+**Email Example**:
+```
+"Send an email to team@example.com about the Q4 results"
+```
+- Automatically calls Email integration
+- Extracts recipient and subject
+- Sends email in configured mode (demo or production)
+
+**Slack Example**:
+```
+"Post to Slack #general about deployment complete"
+```
+- Automatically calls Slack integration
+- Extracts channel and message
+- Posts message in configured mode
+
+**CRM Example**:
+```
+"Update CRM contact John Doe with status qualified"
+```
+- Automatically calls CRM integration
+- Extracts contact details
+- Updates CRM in configured mode
+
+#### Via API Endpoints
+
+Direct API calls for programmatic access:
+
+```bash
+# Get integration status
+curl http://localhost:3000/api/integrations/email
+
+# Trigger automation
+curl -X POST http://localhost:3000/api/integrations/slack \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "post_message",
+    "channel": "#general",
+    "message": "Hello from API"
+  }'
+```
+
+### Troubleshooting
+
+**Integration shows "demo mode" even with credentials**:
+- Verify `.env.local` file is in project root
+- Check environment variable names match exactly
+- Restart Next.js dev server after changing `.env.local`
+- Check browser console for errors
+
+**Email not sending**:
+- Verify SMTP credentials are correct
+- For Gmail, ensure App Password is used (not regular password)
+- Check SMTP port (587 for TLS, 465 for SSL)
+- Verify firewall allows outbound SMTP connections
+
+**Slack messages not posting**:
+- Verify bot token starts with `xoxb-`
+- Ensure bot is added to the target channel
+- Check bot has `chat:write` permission
+- Verify channel name includes # prefix
+
+**CRM not updating**:
+- Verify API endpoint URL is correct
+- Check API key has required permissions
+- Review CRM API documentation for required fields
+- Check API rate limits
 
 ## Development
 
