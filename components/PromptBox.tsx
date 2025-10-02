@@ -25,11 +25,15 @@ export default function PromptBox() {
     };
 
     setMessages([...messages, userMessage]);
+    const currentPrompt = prompt;
     setPrompt('');
     setLoading(true);
     setError(null);
 
     try {
+      // Try to trigger automation based on prompt keywords
+      const automationTriggered = await tryAutomation(currentPrompt);
+
       // Call our secure API route which handles OpenAI requests server-side
       const response = await fetch('/api/openai', {
         method: 'POST',
@@ -40,7 +44,7 @@ export default function PromptBox() {
           model: 'gpt-3.5-turbo',
           messages: [
             ...messages.map(m => ({ role: m.role, content: m.content })),
-            { role: 'user', content: prompt },
+            { role: 'user', content: currentPrompt },
           ],
           temperature: 0.7,
           max_tokens: 500,
@@ -60,10 +64,15 @@ export default function PromptBox() {
       }
 
       // Success - display AI response
+      let content = data.choices[0].message.content;
+      if (automationTriggered) {
+        content += `\n\n✅ Automation triggered: ${automationTriggered}`;
+      }
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.choices[0].message.content,
+        content,
         timestamp: new Date(),
       };
 
@@ -71,10 +80,18 @@ export default function PromptBox() {
       setError(null);
     } catch (err) {
       // Demo fallback response
+      let demoContent = `Demo response: I received your message "${currentPrompt}". To use real AI responses, please configure your OpenAI API key in .env.local (OPENAI_API_KEY).`;
+      
+      // Try automation even in demo mode
+      const automationTriggered = await tryAutomation(currentPrompt);
+      if (automationTriggered) {
+        demoContent += `\n\n✅ Automation triggered: ${automationTriggered}`;
+      }
+
       const demoMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `Demo response: I received your message "${prompt}". To use real AI responses, please configure your OpenAI API key in .env.local (OPENAI_API_KEY).`,
+        content: demoContent,
         timestamp: new Date(),
       };
       setMessages([...messages, userMessage, demoMessage]);
@@ -88,6 +105,54 @@ export default function PromptBox() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const tryAutomation = async (promptText: string): Promise<string | null> => {
+    const lowerPrompt = promptText.toLowerCase();
+    
+    // Detect task type based on keywords
+    let taskType = null;
+    let integration = null;
+    
+    if (lowerPrompt.includes('email') || lowerPrompt.includes('send')) {
+      taskType = 'email';
+      integration = 'email';
+    } else if (lowerPrompt.includes('slack') || lowerPrompt.includes('message') || lowerPrompt.includes('notify')) {
+      taskType = 'slack';
+      integration = 'slack';
+    } else if (lowerPrompt.includes('crm') || lowerPrompt.includes('contact') || lowerPrompt.includes('customer')) {
+      taskType = 'crm';
+      integration = 'crm';
+    }
+    
+    if (!taskType || !integration) {
+      return null;
+    }
+    
+    try {
+      // Trigger automation via backend API
+      const response = await fetch('/api/automate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          task: taskType,
+          priority: 'normal',
+          prompt: promptText,
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return `${integration.toUpperCase()} automation (Task ID: ${data.task_id})`;
+      }
+    } catch (error) {
+      // Silent fail - automation is optional
+      console.error('Automation trigger failed:', error);
+    }
+    
+    return null;
   };
 
   const handleClear = () => {
@@ -115,9 +180,10 @@ export default function PromptBox() {
             <div style={styles.examplePrompts}>
               <p style={styles.exampleLabel}>Try asking:</p>
               <ul style={styles.exampleList}>
+                <li>&quot;Send an email to the sales team&quot;</li>
+                <li>&quot;Post a message to Slack about our deployment&quot;</li>
+                <li>&quot;Update CRM contact information&quot;</li>
                 <li>&quot;How can I automate my email workflows?&quot;</li>
-                <li>&quot;What are best practices for task management?&quot;</li>
-                <li>&quot;Help me set up automation triggers&quot;</li>
               </ul>
             </div>
           </div>

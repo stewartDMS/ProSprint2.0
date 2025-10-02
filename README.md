@@ -22,6 +22,65 @@ Instead of just giving answers, ProSprint AI updates your CRM, sends emails, pos
 - **Document Processing**: Draft reports and summarize documents
 - **Extensible**: Easy to add custom integrations
 
+## Integrations Page
+
+The Integrations page (`/integrations`) provides a centralized interface for managing external app connections and running automations.
+
+### Features
+
+- **Visual Integration Management**: See all available integrations with their connection status
+- **One-Click Connect**: Authorize and connect apps like CRM, Email, and Slack
+- **Automation Triggers**: Execute automations directly from the UI with custom parameters
+- **Real-time Status**: Monitor connection health and integration capabilities
+- **Responsive Design**: Accessible interface that works on all devices
+
+### Accessing Integrations
+
+Navigate to the Integrations page from the main navigation menu or visit `/integrations` directly. Here you can:
+
+1. **View Available Integrations**: See all integrations including CRM, Email, and Slack with their current status
+2. **Connect Apps**: Click "Connect" to authorize each integration
+3. **Run Automations**: Select a connected integration and fill in the automation parameters to execute actions
+4. **Monitor Status**: Check connection status, capabilities, and last sync information
+
+### Automation Flow
+
+The automation system in ProSprint 2.0 works seamlessly across multiple interfaces:
+
+#### 1. From the AI Assistant (PromptBox)
+
+When you submit a prompt to the AI Assistant, ProSprint automatically detects automation opportunities:
+
+- **Keyword Detection**: The system analyzes your prompt for keywords like "email", "slack", "crm", "contact"
+- **Automatic Triggering**: If a matching integration is detected, the automation is triggered automatically
+- **Task Creation**: A task is created and sent to the automation API
+- **Confirmation**: You receive confirmation in the chat that the automation was triggered
+
+Example prompts that trigger automations:
+```
+"Send an email to the sales team about the new product launch"
+"Post a message to Slack about the completed deployment"
+"Update CRM contact information for John Doe"
+```
+
+#### 2. From the Integrations Page
+
+For more control, use the Integrations page to manually trigger automations:
+
+- Select an integration (must be connected)
+- Fill in the required parameters
+- Click "Run Automation" to execute
+
+#### 3. Backend API Flow
+
+All automations go through the `/api/automate` endpoint:
+
+1. Request is received with task type and parameters
+2. System routes to appropriate integration handler
+3. Integration executes the action (e.g., sends email, updates CRM)
+4. Result is returned with status and details
+5. Action is logged for audit trail
+
 ## Quick Start
 
 ### Installation
@@ -473,6 +532,171 @@ Submits an automation task for processing.
 - Email: Send automated notifications, campaign management
 - Slack: Post updates, notify teams
 - External APIs: Webhook triggers, data sync
+
+---
+
+### Integration APIs
+
+#### CRM Integration - /api/integrations/crm.py
+
+##### GET /api/integrations/crm
+Returns the CRM integration status and capabilities.
+
+**Response**:
+```json
+{
+  "integration": "CRM",
+  "status": "connected",
+  "timestamp": "2024-01-01T12:00:00.000000",
+  "capabilities": [
+    "Update contacts",
+    "Manage deals",
+    "Sync companies",
+    "Custom field updates"
+  ],
+  "connected_platform": "Demo CRM",
+  "last_sync": "2024-01-01T12:00:00.000000"
+}
+```
+
+##### POST /api/integrations/crm
+Executes a CRM action.
+
+**Request Body**:
+```json
+{
+  "action": "update",
+  "entity_type": "contact",
+  "data": {
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "status": "completed",
+  "message": "CRM update operation successful",
+  "timestamp": "2024-01-01T12:00:00.000000",
+  "action": "update",
+  "entity_type": "contact",
+  "entity_id": "contact_1234567890",
+  "details": {
+    "platform": "Demo CRM",
+    "operation": "update",
+    "affected_records": 1
+  }
+}
+```
+
+#### Email Integration - /api/integrations/email.py
+
+##### GET /api/integrations/email
+Returns the email integration status and capabilities.
+
+**Response**:
+```json
+{
+  "integration": "Email",
+  "status": "connected",
+  "timestamp": "2024-01-01T12:00:00.000000",
+  "capabilities": [
+    "Send emails",
+    "Template support",
+    "Attachment handling",
+    "Campaign management",
+    "HTML/Plain text"
+  ],
+  "smtp_configured": true,
+  "daily_quota": 500,
+  "emails_sent_today": 42
+}
+```
+
+##### POST /api/integrations/email
+Sends an email.
+
+**Request Body**:
+```json
+{
+  "action": "send",
+  "recipient": "user@example.com",
+  "subject": "Test Email",
+  "body": "This is a test email."
+}
+```
+
+**Response**:
+```json
+{
+  "status": "completed",
+  "message": "Email send operation successful",
+  "timestamp": "2024-01-01T12:00:00.000000",
+  "action": "send",
+  "email_id": "email_1234567890",
+  "details": {
+    "recipient": "user@example.com",
+    "subject": "Test Email",
+    "delivery_status": "sent",
+    "smtp_response": "250 Message accepted for delivery"
+  }
+}
+```
+
+#### Slack Integration - /api/integrations/slack.py
+
+##### GET /api/integrations/slack
+Returns the Slack integration status and capabilities.
+
+**Response**:
+```json
+{
+  "integration": "Slack",
+  "status": "connected",
+  "timestamp": "2024-01-01T12:00:00.000000",
+  "capabilities": [
+    "Post to channels",
+    "Direct messages",
+    "Rich formatting",
+    "File uploads",
+    "Thread replies"
+  ],
+  "workspace": "Demo Workspace",
+  "bot_name": "ProSprint Bot",
+  "available_channels": ["#general", "#ops", "#dev", "#alerts"]
+}
+```
+
+##### POST /api/integrations/slack
+Posts a message to Slack.
+
+**Request Body**:
+```json
+{
+  "action": "post_message",
+  "channel": "#general",
+  "message": "Hello from ProSprint!"
+}
+```
+
+**Response**:
+```json
+{
+  "status": "completed",
+  "message": "Slack post_message operation successful",
+  "timestamp": "2024-01-01T12:00:00.000000",
+  "action": "post_message",
+  "message_id": "slack_1234567890",
+  "details": {
+    "channel": "#general",
+    "workspace": "Demo Workspace",
+    "posted_by": "ProSprint Bot",
+    "permalink": "https://demo.slack.com/archives/C12345/1234567890"
+  }
+}
+```
 
 ---
 

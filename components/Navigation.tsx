@@ -9,6 +9,7 @@ export default function Navigation() {
     { label: 'Home', href: '/' },
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Business Data', href: '/business-data' },
+    { label: 'Integrations', href: '/integrations' },
     { label: 'Settings', href: '/settings' },
     { label: 'Login', href: '/login' },
   ];
