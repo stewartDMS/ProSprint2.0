@@ -26,8 +26,71 @@ interface AutomationAction {
 export default function Integrations() {
   const [integrations, setIntegrations] = useState<Integration[]>([
     {
+      id: 'hubspot',
+      name: 'HubSpot',
+      description: 'CRM, marketing automation, and sales',
+      status: 'disconnected',
+      icon: '🧲',
+    },
+    {
+      id: 'salesforce',
+      name: 'Salesforce',
+      description: 'Cloud-based CRM platform',
+      status: 'disconnected',
+      icon: '☁️',
+    },
+    {
+      id: 'google-drive',
+      name: 'Google Drive',
+      description: 'Cloud storage and document management',
+      status: 'disconnected',
+      icon: '📁',
+    },
+    {
+      id: 'xero',
+      name: 'Xero',
+      description: 'Accounting and invoicing software',
+      status: 'disconnected',
+      icon: '💰',
+    },
+    {
+      id: 'notion',
+      name: 'Notion',
+      description: 'Workspace for notes, docs, and projects',
+      status: 'disconnected',
+      icon: '📝',
+    },
+    {
+      id: 'asana',
+      name: 'Asana',
+      description: 'Project and task management',
+      status: 'disconnected',
+      icon: '✅',
+    },
+    {
+      id: 'jira',
+      name: 'Jira',
+      description: 'Issue tracking and agile project management',
+      status: 'disconnected',
+      icon: '🎯',
+    },
+    {
+      id: 'gmail',
+      name: 'Gmail',
+      description: 'Send emails via Gmail API with OAuth2',
+      status: 'disconnected',
+      icon: '✉️',
+    },
+    {
+      id: 'outlook',
+      name: 'Microsoft Outlook',
+      description: 'Send emails via Microsoft Graph API with OAuth2',
+      status: 'disconnected',
+      icon: '📨',
+    },
+    {
       id: 'crm',
-      name: 'CRM',
+      name: 'CRM (Legacy)',
       description: 'Manage contacts, deals, and companies',
       status: 'disconnected',
       icon: '👥',
@@ -38,20 +101,6 @@ export default function Integrations() {
       description: 'Send emails via SMTP server',
       status: 'disconnected',
       icon: '📧',
-    },
-    {
-      id: 'gmail',
-      name: 'Gmail',
-      description: 'Send emails via Gmail API with OAuth2',
-      status: 'disconnected',
-      icon: '✉️',
-    },
-    {
-      id: 'microsoft',
-      name: 'Microsoft Outlook',
-      description: 'Send emails via Microsoft Graph API with OAuth2',
-      status: 'disconnected',
-      icon: '📨',
     },
     {
       id: 'slack',
@@ -69,9 +118,98 @@ export default function Integrations() {
 
   const automationActions: AutomationAction[] = [
     {
+      integration: 'hubspot',
+      action: 'create_contact',
+      description: 'Create or update a contact in HubSpot',
+      inputs: [
+        { name: 'email', label: 'Email', type: 'email', placeholder: 'contact@example.com' },
+        { name: 'firstname', label: 'First Name', type: 'text', placeholder: 'John' },
+        { name: 'lastname', label: 'Last Name', type: 'text', placeholder: 'Doe' },
+      ],
+    },
+    {
+      integration: 'salesforce',
+      action: 'create_lead',
+      description: 'Create a lead in Salesforce',
+      inputs: [
+        { name: 'email', label: 'Email', type: 'email', placeholder: 'lead@example.com' },
+        { name: 'firstname', label: 'First Name', type: 'text', placeholder: 'Jane' },
+        { name: 'lastname', label: 'Last Name', type: 'text', placeholder: 'Smith' },
+        { name: 'company', label: 'Company', type: 'text', placeholder: 'Acme Corp' },
+      ],
+    },
+    {
+      integration: 'google-drive',
+      action: 'create_document',
+      description: 'Create a new document in Google Drive',
+      inputs: [
+        { name: 'title', label: 'Document Title', type: 'text', placeholder: 'My Document' },
+        { name: 'content', label: 'Content', type: 'textarea', placeholder: 'Document content...' },
+      ],
+    },
+    {
+      integration: 'xero',
+      action: 'create_invoice',
+      description: 'Create an invoice in Xero',
+      inputs: [
+        { name: 'contact', label: 'Customer', type: 'text', placeholder: 'Customer Name' },
+        { name: 'amount', label: 'Amount', type: 'text', placeholder: '100.00' },
+        { name: 'description', label: 'Description', type: 'text', placeholder: 'Invoice description' },
+      ],
+    },
+    {
+      integration: 'notion',
+      action: 'create_page',
+      description: 'Create a new page in Notion',
+      inputs: [
+        { name: 'title', label: 'Page Title', type: 'text', placeholder: 'My Page' },
+        { name: 'content', label: 'Content', type: 'textarea', placeholder: 'Page content...' },
+      ],
+    },
+    {
+      integration: 'asana',
+      action: 'create_task',
+      description: 'Create a task in Asana',
+      inputs: [
+        { name: 'name', label: 'Task Name', type: 'text', placeholder: 'Complete project' },
+        { name: 'notes', label: 'Description', type: 'textarea', placeholder: 'Task details...' },
+        { name: 'due_on', label: 'Due Date', type: 'text', placeholder: '2024-12-31' },
+      ],
+    },
+    {
+      integration: 'jira',
+      action: 'create_issue',
+      description: 'Create an issue in Jira',
+      inputs: [
+        { name: 'summary', label: 'Summary', type: 'text', placeholder: 'Bug in login' },
+        { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Issue details...' },
+        { name: 'type', label: 'Type', type: 'text', placeholder: 'Bug' },
+      ],
+    },
+    {
+      integration: 'gmail',
+      action: 'send',
+      description: 'Send an email via Gmail API',
+      inputs: [
+        { name: 'recipient', label: 'Recipient', type: 'email', placeholder: 'recipient@example.com' },
+        { name: 'subject', label: 'Subject', type: 'text', placeholder: 'Email subject' },
+        { name: 'body', label: 'Body', type: 'textarea', placeholder: 'Email body...' },
+      ],
+    },
+    {
+      integration: 'outlook',
+      action: 'send',
+      description: 'Send an email via Microsoft Graph API',
+      inputs: [
+        { name: 'recipient', label: 'Recipient', type: 'email', placeholder: 'recipient@example.com' },
+        { name: 'subject', label: 'Subject', type: 'text', placeholder: 'Email subject' },
+        { name: 'body', label: 'Body', type: 'textarea', placeholder: 'Email body...' },
+      ],
+    },
+    {
       integration: 'crm',
       action: 'update_contact',
-      description: 'Update a contact record',
+      description: 'Update a contact record (Legacy)',
       inputs: [
         { name: 'entity_type', label: 'Entity Type', type: 'select', placeholder: 'contact' },
         { name: 'contact_name', label: 'Contact Name', type: 'text', placeholder: 'John Doe' },
@@ -82,26 +220,6 @@ export default function Integrations() {
       integration: 'email',
       action: 'send',
       description: 'Send an email via SMTP',
-      inputs: [
-        { name: 'recipient', label: 'Recipient', type: 'email', placeholder: 'recipient@example.com' },
-        { name: 'subject', label: 'Subject', type: 'text', placeholder: 'Email subject' },
-        { name: 'body', label: 'Body', type: 'textarea', placeholder: 'Email body' },
-      ],
-    },
-    {
-      integration: 'gmail',
-      action: 'send',
-      description: 'Send an email via Gmail API',
-      inputs: [
-        { name: 'recipient', label: 'Recipient', type: 'email', placeholder: 'recipient@example.com' },
-        { name: 'subject', label: 'Subject', type: 'text', placeholder: 'Email subject' },
-        { name: 'body', label: 'Body', type: 'textarea', placeholder: 'Email body' },
-      ],
-    },
-    {
-      integration: 'microsoft',
-      action: 'send',
-      description: 'Send an email via Microsoft Graph API',
       inputs: [
         { name: 'recipient', label: 'Recipient', type: 'email', placeholder: 'recipient@example.com' },
         { name: 'subject', label: 'Subject', type: 'text', placeholder: 'Email subject' },
@@ -120,13 +238,33 @@ export default function Integrations() {
   ];
 
   useEffect(() => {
+    // Check for OAuth callback messages in URL
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get('connected');
+    const error = params.get('error');
+    
+    if (connected) {
+      setMessage({
+        type: 'success',
+        text: `${connected.toUpperCase()} connected successfully!`,
+      });
+      // Clean up URL
+      window.history.replaceState({}, '', '/integrations');
+    } else if (error) {
+      setMessage({
+        type: 'error',
+        text: `Failed to connect ${error.toUpperCase()}. Please try again.`,
+      });
+      window.history.replaceState({}, '', '/integrations');
+    }
+    
     // Fetch integration statuses on mount
     const fetchStatuses = async () => {
       const updatedIntegrations: Integration[] = await Promise.all(
         integrations.map(async (integration) => {
           try {
             // Gmail and Microsoft use the email endpoint
-            const endpoint = (integration.id === 'gmail' || integration.id === 'microsoft') 
+            const endpoint = (integration.id === 'gmail' || integration.id === 'outlook') 
               ? '/api/integrations/email' 
               : `/api/integrations/${integration.id}`;
             
@@ -144,9 +282,9 @@ export default function Integrations() {
                 };
               }
               
-              // Handle OAuth2 status for Microsoft
-              if (integration.id === 'microsoft') {
-                const isConnected = data.oauth2?.microsoft_connected || false;
+              // Handle OAuth2 status for Outlook
+              if (integration.id === 'outlook') {
+                const isConnected = data.oauth2?.outlook_connected || false;
                 return {
                   ...integration,
                   status: (isConnected ? 'connected' : 'disconnected') as 'connected' | 'disconnected',
@@ -174,126 +312,126 @@ export default function Integrations() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
-
   const handleConnect = async (integrationId: string) => {
     setLoading(integrationId);
     setMessage(null);
 
     try {
-      // Handle OAuth2 flows for Gmail and Microsoft
-      if (integrationId === 'gmail') {
-        const response = await fetch(`/api/integrations/email?action=oauth_gmail`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.auth_url) {
-            // Open OAuth2 authorization URL in a popup
-            const width = 600;
-            const height = 700;
-            const left = window.screen.width / 2 - width / 2;
-            const top = window.screen.height / 2 - height / 2;
-            const popup = window.open(
-              data.auth_url,
-              'Gmail Authorization',
-              `width=${width},height=${height},left=${left},top=${top}`
-            );
-            
-            // Poll for popup closure or listen for callback
-            const checkPopup = setInterval(() => {
-              if (popup && popup.closed) {
-                clearInterval(checkPopup);
-                // Refresh integration status
-                fetchIntegrationStatus('gmail');
-                setMessage({
-                  type: 'success',
-                  text: 'Gmail authorization window closed. Check connection status.',
-                });
-              }
-            }, 500);
-          } else {
-            // Demo mode
-            setIntegrations(
-              integrations.map((integration) =>
-                integration.id === 'gmail'
-                  ? { ...integration, status: 'connected', capabilities: ['Send emails via Gmail API', 'OAuth2 authenticated'] }
-                  : integration
-              )
-            );
-            setMessage({
-              type: 'success',
-              text: 'Gmail connected in DEMO mode. Configure GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET for real integration.',
-            });
-          }
+      const response = await fetch(`/api/integrations/${integrationId}?action=connect`);
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Check if OAuth redirect is required
+        if (data.status === 'redirect' && data.auth_url) {
+          // Redirect to OAuth authorization page
+          window.location.href = data.auth_url;
+          return;
         }
-      } else if (integrationId === 'microsoft') {
-        const response = await fetch(`/api/integrations/email?action=oauth_microsoft`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.auth_url) {
-            // Open OAuth2 authorization URL in a popup
-            const width = 600;
-            const height = 700;
-            const left = window.screen.width / 2 - width / 2;
-            const top = window.screen.height / 2 - height / 2;
-            const popup = window.open(
-              data.auth_url,
-              'Microsoft Authorization',
-              `width=${width},height=${height},left=${left},top=${top}`
-            );
-            
-            // Poll for popup closure or listen for callback
-            const checkPopup = setInterval(() => {
-              if (popup && popup.closed) {
-                clearInterval(checkPopup);
-                // Refresh integration status
-                fetchIntegrationStatus('microsoft');
-                setMessage({
-                  type: 'success',
-                  text: 'Microsoft authorization window closed. Check connection status.',
-                });
-              }
-            }, 500);
-          } else {
-            // Demo mode
-            setIntegrations(
-              integrations.map((integration) =>
-                integration.id === 'microsoft'
-                  ? { ...integration, status: 'connected', capabilities: ['Send emails via Microsoft Graph API', 'OAuth2 authenticated'] }
-                  : integration
-              )
-            );
-            setMessage({
-              type: 'success',
-              text: 'Microsoft connected in DEMO mode. Configure MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET for real integration.',
-            });
+        
+        setIntegrations(
+          integrations.map((integration) =>
+            integration.id === integrationId
+              ? { ...integration, status: 'connected', capabilities: data.capabilities }
+              : integration
+          )
+        );
+        
+        const mode = data.configured ? 'PRODUCTION' : 'DEMO';
+        const modeMessage = data.configured 
+          ? 'with real credentials' 
+          : 'in demo mode (configure API keys in .env.local for real integration)';
+        
+        setMessage({
+          type: 'success',
+          text: `${integrationId.toUpperCase()} connected successfully ${modeMessage} [${mode}]`,
+        });
+
+        // Handle OAuth2 flows for Gmail and Outlook
+        if (integrationId === 'gmail') {
+          const response = await fetch(`/api/integrations/email?action=oauth_gmail`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.auth_url) {
+              // Open OAuth2 authorization URL in a popup
+              const width = 600;
+              const height = 700;
+              const left = window.screen.width / 2 - width / 2;
+              const top = window.screen.height / 2 - height / 2;
+              const popup = window.open(
+                data.auth_url,
+                'Gmail Authorization',
+                `width=${width},height=${height},left=${left},top=${top}`
+              );
+              
+              // Poll for popup closure or listen for callback
+              const checkPopup = setInterval(() => {
+                if (popup && popup.closed) {
+                  clearInterval(checkPopup);
+                  // Refresh integration status
+                  fetchIntegrationStatus('gmail');
+                  setMessage({
+                    type: 'success',
+                    text: 'Gmail authorization window closed. Check connection status.',
+                  });
+                }
+              }, 500);
+            } else {
+              setIntegrations(
+                integrations.map((integration) =>
+                  integration.id === 'gmail'
+                    ? { ...integration, status: 'connected', capabilities: ['Send emails via Gmail API', 'OAuth2 authenticated'] }
+                    : integration
+                )
+              );
+              setMessage({
+                type: 'success',
+                text: 'Gmail connected in DEMO mode. Configure GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET for real integration.',
+              });
+            }
+          }
+        } else if (integrationId === 'outlook') {
+          const response = await fetch(`/api/integrations/email?action=oauth_outlook`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.auth_url) {
+              const width = 600;
+              const height = 700;
+              const left = window.screen.width / 2 - width / 2;
+              const top = window.screen.height / 2 - height / 2;
+              const popup = window.open(
+                data.auth_url,
+                'Outlook Authorization',
+                `width=${width},height=${height},left=${left},top=${top}`
+              );
+              
+              const checkPopup = setInterval(() => {
+                if (popup && popup.closed) {
+                  clearInterval(checkPopup);
+                  fetchIntegrationStatus('outlook');
+                  setMessage({
+                    type: 'success',
+                    text: 'Outlook authorization window closed. Check connection status.',
+                  });
+                }
+              }, 500);
+            } else {
+              setIntegrations(
+                integrations.map((integration) =>
+                  integration.id === 'outlook'
+                    ? { ...integration, status: 'connected', capabilities: ['Send emails via Microsoft Graph API', 'OAuth2 authenticated'] }
+                    : integration
+                )
+              );
+              setMessage({
+                type: 'success',
+                text: 'Outlook connected in DEMO mode. Configure OUTLOOK_CLIENT_ID and OUTLOOK_CLIENT_SECRET for real integration.',
+              });
+            }
           }
         }
       } else {
-        // Standard connection flow for other integrations
-        const response = await fetch(`/api/integrations/${integrationId}?action=connect`);
-        if (response.ok) {
-          const data = await response.json();
-          setIntegrations(
-            integrations.map((integration) =>
-              integration.id === integrationId
-                ? { ...integration, status: 'connected', capabilities: data.capabilities }
-                : integration
-            )
-          );
-          
-          const mode = data.configured ? 'PRODUCTION' : 'DEMO';
-          const modeMessage = data.configured 
-            ? 'with real credentials' 
-            : 'in demo mode (configure API keys in .env.local for real integration)';
-          
-          setMessage({
-            type: 'success',
-            text: `${integrationId.toUpperCase()} connected successfully ${modeMessage} [${mode}]`,
-          });
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to connect');
-        }
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to connect');
       }
     } catch (error) {
       setMessage({
@@ -307,14 +445,13 @@ export default function Integrations() {
 
   const fetchIntegrationStatus = async (integrationId: string) => {
     try {
-      const endpoint = integrationId === 'gmail' || integrationId === 'microsoft' 
+      const endpoint = integrationId === 'gmail' || integrationId === 'outlook' 
         ? '/api/integrations/email' 
         : `/api/integrations/${integrationId}`;
       const response = await fetch(endpoint);
       if (response.ok) {
         const data = await response.json();
         
-        // For Gmail and Microsoft, check OAuth2 status
         if (integrationId === 'gmail' && data.oauth2?.gmail_connected) {
           setIntegrations(prev =>
             prev.map(int =>
@@ -323,10 +460,10 @@ export default function Integrations() {
                 : int
             )
           );
-        } else if (integrationId === 'microsoft' && data.oauth2?.microsoft_connected) {
+        } else if (integrationId === 'outlook' && data.oauth2?.outlook_connected) {
           setIntegrations(prev =>
             prev.map(int =>
-              int.id === 'microsoft'
+              int.id === 'outlook'
                 ? { ...int, status: 'connected', capabilities: ['Send emails via Microsoft Graph API', 'OAuth2 authenticated'] }
                 : int
             )
@@ -343,12 +480,11 @@ export default function Integrations() {
     setMessage(null);
 
     try {
-      // Handle disconnect for Gmail and Microsoft OAuth2
       let endpoint = `/api/integrations/${integrationId}?action=disconnect`;
       if (integrationId === 'gmail') {
         endpoint = '/api/integrations/email?action=disconnect_gmail';
-      } else if (integrationId === 'microsoft') {
-        endpoint = '/api/integrations/email?action=disconnect_microsoft';
+      } else if (integrationId === 'outlook') {
+        endpoint = '/api/integrations/email?action=disconnect_outlook';
       }
       
       const response = await fetch(endpoint);
@@ -385,11 +521,10 @@ export default function Integrations() {
     if (!action) return;
 
     try {
-      // Determine the API endpoint and provider
       let endpoint = `/api/integrations/${selectedIntegration}`;
       let provider = selectedIntegration;
       
-      if (selectedIntegration === 'gmail' || selectedIntegration === 'microsoft') {
+      if (selectedIntegration === 'gmail' || selectedIntegration === 'outlook') {
         endpoint = '/api/integrations/email';
         provider = selectedIntegration;
       }

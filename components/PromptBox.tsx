@@ -161,6 +161,68 @@ export default function PromptBox() {
         extractedData.message = promptText;
       }
     }
+    // HubSpot detection
+    else if (lowerPrompt.includes('hubspot')) {
+      integration = 'hubspot';
+      action = 'create_contact';
+      extractedData.data = { prompt: promptText };
+    }
+    // Salesforce detection
+    else if (lowerPrompt.includes('salesforce')) {
+      integration = 'salesforce';
+      action = 'create_lead';
+      extractedData.data = { prompt: promptText };
+    }
+    // Google Drive detection
+    else if (lowerPrompt.includes('google drive') || lowerPrompt.includes('google doc') || 
+             lowerPrompt.includes('gdrive') || lowerPrompt.includes('upload to drive')) {
+      integration = 'google-drive';
+      action = 'create_document';
+      extractedData.data = { prompt: promptText };
+    }
+    // Xero detection
+    else if (lowerPrompt.includes('xero') || lowerPrompt.includes('invoice') || 
+             lowerPrompt.includes('expense')) {
+      integration = 'xero';
+      action = 'create_invoice';
+      extractedData.data = { prompt: promptText };
+    }
+    // Notion detection
+    else if (lowerPrompt.includes('notion') || lowerPrompt.includes('notion page')) {
+      integration = 'notion';
+      action = 'create_page';
+      extractedData.data = { prompt: promptText };
+    }
+    // Asana detection
+    else if (lowerPrompt.includes('asana') || lowerPrompt.includes('create task') || 
+             (lowerPrompt.includes('task') && lowerPrompt.includes('project'))) {
+      integration = 'asana';
+      action = 'create_task';
+      extractedData.data = { prompt: promptText };
+    }
+    // Jira detection
+    else if (lowerPrompt.includes('jira') || lowerPrompt.includes('create issue') || 
+             lowerPrompt.includes('jira ticket')) {
+      integration = 'jira';
+      action = 'create_issue';
+      extractedData.data = { prompt: promptText };
+    }
+    // Gmail detection (specific)
+    else if (lowerPrompt.includes('gmail')) {
+      integration = 'gmail';
+      action = 'send';
+      extractedData.recipient = 'team@example.com';
+      extractedData.subject = 'Automated notification';
+      extractedData.body = promptText;
+    }
+    // Outlook detection (specific)
+    else if (lowerPrompt.includes('outlook')) {
+      integration = 'outlook';
+      action = 'send';
+      extractedData.recipient = 'team@example.com';
+      extractedData.subject = 'Automated notification';
+      extractedData.body = promptText;
+    }
     // CRM detection
     else if (lowerPrompt.includes('crm') || lowerPrompt.includes('contact') || 
              lowerPrompt.includes('customer') || lowerPrompt.includes('update contact')) {
