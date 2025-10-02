@@ -16,11 +16,23 @@ Instead of just giving answers, ProSprint AI updates your CRM, sends emails, pos
 
 ## Supported Integrations
 
-- **CRM Systems**: Update contacts, deals, and companies (Salesforce, HubSpot, etc.)
-- **Email**: Send emails via SMTP
-- **Slack**: Post messages to channels
-- **Document Processing**: Draft reports and summarize documents
-- **Extensible**: Easy to add custom integrations
+### One-Click OAuth2 Integrations
+
+- **HubSpot**: CRM with marketing automation - manage contacts, deals, and campaigns
+- **Salesforce**: Enterprise CRM platform - leads, opportunities, accounts, and custom objects
+- **Google Drive**: Cloud storage and document management - create and manage files and folders
+- **Xero**: Accounting software - invoices, expenses, and financial reports
+- **Notion**: All-in-one workspace - pages, databases, and team collaboration
+- **Asana**: Project management - tasks, projects, and team workflows
+- **Jira**: Issue tracking and agile project management - tickets, sprints, and boards
+- **Gmail**: Google email service with OAuth2 - send and manage emails securely
+- **Outlook**: Microsoft email via Graph API - send and manage emails with OAuth2
+
+### Legacy Integrations
+
+- **CRM (Generic)**: Update contacts, deals, and companies via API keys
+- **Email (SMTP)**: Send emails via SMTP configuration
+- **Slack**: Post messages to channels with bot token
 
 ## Integrations Page
 
@@ -223,29 +235,65 @@ prosprint/
 
 ## Integration Setup
 
-ProSprint 2.0 supports real integrations with external services. Configure API keys and credentials in `.env.local` to enable production mode. Without configuration, integrations run in demo mode with simulated responses.
+ProSprint 2.0 supports seamless one-click OAuth2 integrations with 9 major platforms. All integrations work in demo mode by default and automatically upgrade to production mode when OAuth credentials are configured.
 
-### Configuring Integrations
+### Quick Start
 
-Create a `.env.local` file in the project root with your credentials:
+1. **Demo Mode** (default): All integrations work immediately without configuration for testing and evaluation
+2. **Production Mode**: Configure OAuth2 credentials for real API access
+
+### OAuth2 Setup Instructions
+
+Create a `.env.local` file in the project root and add your OAuth credentials:
 
 ```bash
+# Base URL (important for OAuth callbacks)
+NEXT_PUBLIC_BASE_URL=http://localhost:3000  # Change to your deployment URL in production
+
 # OpenAI API (required for AI features)
 OPENAI_API_KEY=your_openai_api_key_here
 
-# CRM Integration (optional)
-CRM_API_KEY=your_crm_api_key
-CRM_API_URL=https://api.yourcrm.com/v1
+# HubSpot OAuth2
+HUBSPOT_CLIENT_ID=your_hubspot_client_id
+HUBSPOT_CLIENT_SECRET=your_hubspot_client_secret
 
-# Email/SMTP Integration (optional)
+# Salesforce OAuth2
+SALESFORCE_CLIENT_ID=your_salesforce_client_id
+SALESFORCE_CLIENT_SECRET=your_salesforce_client_secret
+SALESFORCE_SANDBOX=false  # Set to true for sandbox environment
+
+# Google OAuth2 (for both Gmail and Google Drive)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GMAIL_CLIENT_ID=your_google_client_id
+GMAIL_CLIENT_SECRET=your_google_client_secret
+
+# Xero OAuth2
+XERO_CLIENT_ID=your_xero_client_id
+XERO_CLIENT_SECRET=your_xero_client_secret
+
+# Notion OAuth2
+NOTION_CLIENT_ID=your_notion_client_id
+NOTION_CLIENT_SECRET=your_notion_client_secret
+
+# Asana OAuth2
+ASANA_CLIENT_ID=your_asana_client_id
+ASANA_CLIENT_SECRET=your_asana_client_secret
+
+# Jira OAuth2
+JIRA_CLIENT_ID=your_jira_client_id
+JIRA_CLIENT_SECRET=your_jira_client_secret
+
+# Microsoft OAuth2 (for Outlook)
+MICROSOFT_CLIENT_ID=your_microsoft_client_id
+MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret
+
+# Legacy Integrations (optional)
+SLACK_TOKEN=xoxb-your-slack-bot-token
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
-
-# Slack Integration (optional)
-SLACK_TOKEN=xoxb-your-slack-bot-token
-SLACK_CHANNEL=#general
 ```
 
 ### Integration Details
@@ -418,19 +466,137 @@ curl -X POST http://localhost:3000/api/integrations/slack \
   }'
 ```
 
+### OAuth2 Integration Setup Guide
+
+#### HubSpot Setup
+
+1. Go to [HubSpot Developer Portal](https://developers.hubspot.com/)
+2. Create a new app or select existing app
+3. Navigate to "Auth" tab
+4. Set redirect URL: `http://localhost:3000/api/integrations/hubspot?action=callback`
+5. Copy Client ID and Client Secret
+6. Add required scopes: `crm.objects.contacts.read`, `crm.objects.contacts.write`, `crm.objects.companies.read`, `crm.objects.companies.write`, `crm.objects.deals.read`, `crm.objects.deals.write`
+7. Add credentials to `.env.local`
+
+**Automation Capabilities**: Create/update contacts, manage companies, track deals, custom properties
+
+#### Salesforce Setup
+
+1. Log in to [Salesforce](https://login.salesforce.com/) (or [Sandbox](https://test.salesforce.com/))
+2. Go to Setup → Apps → App Manager → New Connected App
+3. Enable OAuth Settings
+4. Set Callback URL: `http://localhost:3000/api/integrations/salesforce?action=callback`
+5. Select OAuth Scopes: Full access (or customize as needed)
+6. Copy Consumer Key (Client ID) and Consumer Secret
+7. Add credentials to `.env.local`
+
+**Automation Capabilities**: Manage leads, opportunities, accounts, contacts, cases, custom objects
+
+#### Google Drive & Gmail Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Enable APIs: Google Drive API, Gmail API, Google Docs API
+4. Go to Credentials → Create Credentials → OAuth 2.0 Client ID
+5. Set Application type: Web application
+6. Add Authorized redirect URIs:
+   - `http://localhost:3000/api/integrations/google-drive?action=callback`
+   - `http://localhost:3000/api/integrations/gmail?action=callback`
+7. Copy Client ID and Client Secret
+8. Add same credentials for both GOOGLE_CLIENT_ID and GMAIL_CLIENT_ID
+
+**Automation Capabilities**: Upload/download files, create Google Docs, manage folders, send/read emails
+
+#### Xero Setup
+
+1. Go to [Xero Developer Portal](https://developer.xero.com/)
+2. Create a new app → OAuth 2.0 app
+3. Set Redirect URI: `http://localhost:3000/api/integrations/xero?action=callback`
+4. Copy Client ID and Client Secret
+5. Add credentials to `.env.local`
+
+**Automation Capabilities**: Create invoices, track expenses, manage contacts, financial reporting
+
+#### Notion Setup
+
+1. Go to [Notion Integrations](https://www.notion.so/my-integrations)
+2. Create a new integration
+3. Copy the Internal Integration Token (this is your Client Secret)
+4. For OAuth: Go to Distribution → Public integration
+5. Set Redirect URI: `http://localhost:3000/api/integrations/notion?action=callback`
+6. Copy OAuth client ID and secret
+7. Add credentials to `.env.local`
+
+**Automation Capabilities**: Create pages, manage databases, search content, add blocks
+
+#### Asana Setup
+
+1. Go to [Asana Developer Console](https://app.asana.com/0/my-apps)
+2. Create a new app
+3. Set Redirect URL: `http://localhost:3000/api/integrations/asana?action=callback`
+4. Copy Client ID and Client Secret
+5. Add credentials to `.env.local`
+
+**Automation Capabilities**: Create tasks, manage projects, assign work, track deadlines
+
+#### Jira Setup
+
+1. Go to [Atlassian Developer Console](https://developer.atlassian.com/console/myapps/)
+2. Create a new OAuth 2.0 app
+3. Add Callback URL: `http://localhost:3000/api/integrations/jira?action=callback`
+4. Enable Jira API
+5. Add permissions: `read:jira-work`, `write:jira-work`, `manage:jira-project`
+6. Copy Client ID and Client Secret
+7. Add credentials to `.env.local`
+
+**Automation Capabilities**: Create issues, update tickets, manage sprints, custom workflows
+
+#### Microsoft Outlook Setup
+
+1. Go to [Azure Portal](https://portal.azure.com/)
+2. Navigate to Azure Active Directory → App registrations
+3. Create New registration
+4. Set Redirect URI (Web): `http://localhost:3000/api/integrations/outlook?action=callback`
+5. Go to Certificates & secrets → New client secret
+6. Copy Application (client) ID and client secret value
+7. Go to API permissions → Add: `Mail.Send`, `Mail.Read`
+8. Add credentials to `.env.local`
+
+**Automation Capabilities**: Send emails, read emails, manage calendar, search inbox
+
+### Customer Workflow
+
+1. **Browse Integrations**: Visit `/integrations` page to see all available services
+2. **One-Click Connect**: Click "Connect" button on any integration
+3. **OAuth Authorization**: Automatically redirected to service's authorization page
+4. **Grant Access**: Review and approve requested permissions
+5. **Instant Ready**: Redirected back to ProSprint with active connection
+6. **Start Automating**: Use AI prompts or manual triggers to execute actions
+
 ### Troubleshooting
 
 **Integration shows "demo mode" even with credentials**:
 - Verify `.env.local` file is in project root
 - Check environment variable names match exactly
+- Ensure `NEXT_PUBLIC_BASE_URL` is set correctly
 - Restart Next.js dev server after changing `.env.local`
 - Check browser console for errors
 
+**OAuth redirect not working**:
+- Verify redirect URIs match exactly in OAuth app settings
+- Check if callback URLs include `?action=callback`
+- Ensure `NEXT_PUBLIC_BASE_URL` matches your deployment URL
+- For production, update all redirect URIs to use HTTPS
+
+**Token expired errors**:
+- Tokens are automatically refreshed (when refresh_token is available)
+- Disconnect and reconnect the integration to get new tokens
+- Check token storage implementation for your environment
+
 **Email not sending**:
-- Verify SMTP credentials are correct
-- For Gmail, ensure App Password is used (not regular password)
-- Check SMTP port (587 for TLS, 465 for SSL)
-- Verify firewall allows outbound SMTP connections
+- Verify SMTP credentials are correct (legacy integration)
+- For OAuth Gmail/Outlook, ensure proper scopes are granted
+- Check API quotas and rate limits
 
 **Slack messages not posting**:
 - Verify bot token starts with `xoxb-`
