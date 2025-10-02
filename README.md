@@ -361,6 +361,43 @@ If your application needs environment variables, add them in:
 - **Local development**: Create a `.env.local` file
 - **Vercel deployment**: Add them in the Vercel dashboard under Settings → Environment Variables
 
+#### OpenAI API Configuration
+
+The AI Assistant feature requires an OpenAI API key to provide real AI-powered responses. The API key is kept secure on the server side and never exposed to the frontend.
+
+**Setup Instructions:**
+
+1. **For Local Development:**
+   ```bash
+   # Create .env.local in the project root
+   echo "OPENAI_API_KEY=your_openai_api_key_here" > .env.local
+   ```
+
+2. **For Vercel Deployment:**
+   - Go to your Vercel project dashboard
+   - Navigate to Settings → Environment Variables
+   - Add a new variable:
+     - Name: `OPENAI_API_KEY`
+     - Value: Your OpenAI API key
+     - Select appropriate environments (Production, Preview, Development)
+
+**Demo Mode:**
+
+If `OPENAI_API_KEY` is not configured, the AI Assistant automatically runs in demo mode:
+- Shows a simulated response to demonstrate the UI
+- Displays a message indicating demo mode is active
+- No actual API calls are made to OpenAI
+- Perfect for testing the interface without incurring API costs
+
+To get an OpenAI API key:
+1. Visit [OpenAI Platform](https://platform.openai.com/)
+2. Sign up or log in
+3. Go to API Keys section
+4. Create a new API key
+5. Copy and add it to your `.env.local` or Vercel environment variables
+
+**Security Note:** The API key is only accessible server-side through the `/api/openai` endpoint, ensuring your credentials are never exposed to the browser.
+
 ## Key Features
 
 ### Frontend (Next.js + React)
@@ -614,6 +651,75 @@ Creates or updates an automation trigger.
 - `enable` - Enable a trigger
 - `disable` - Disable a trigger
 - `test` - Test trigger execution
+
+---
+
+### OpenAI API - /api/openai
+
+Secure server-side proxy for OpenAI API requests. This endpoint keeps your OpenAI API key secure by handling all requests on the server side, preventing key exposure in the frontend.
+
+#### POST /api/openai
+
+Processes chat completion requests using OpenAI's GPT models.
+
+**Request Body**:
+```json
+{
+  "messages": [
+    { "role": "user", "content": "How can I automate my email workflows?" }
+  ],
+  "model": "gpt-3.5-turbo",
+  "temperature": 0.7,
+  "max_tokens": 500
+}
+```
+
+**Parameters**:
+- `messages` (required): Array of message objects with `role` and `content`
+- `model` (optional): OpenAI model to use (default: "gpt-3.5-turbo")
+- `temperature` (optional): Sampling temperature 0-2 (default: 0.7)
+- `max_tokens` (optional): Maximum tokens in response (default: 500)
+
+**Success Response**:
+```json
+{
+  "choices": [
+    {
+      "message": {
+        "content": "Here are some ways to automate your email workflows..."
+      }
+    }
+  ]
+}
+```
+
+**Demo Mode Response** (when OPENAI_API_KEY is not configured):
+```json
+{
+  "error": "OpenAI API key not configured. Running in demo mode.",
+  "demoMode": true
+}
+```
+
+**Error Response**:
+```json
+{
+  "error": "Error message describing what went wrong",
+  "demoMode": false
+}
+```
+
+**Security Features**:
+- API key is only stored server-side as `OPENAI_API_KEY` environment variable
+- Never exposed to the browser or frontend code
+- All requests are proxied through the secure backend
+- Compatible with Vercel deployment and environment variables
+
+**Demo Mode Behavior**:
+- If `OPENAI_API_KEY` is not set, the API returns a demo mode flag
+- Frontend automatically falls back to showing demo responses
+- No charges incurred when running in demo mode
+- Perfect for testing and development without API costs
 
 ## Technology Stack
 
