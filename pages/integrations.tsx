@@ -118,9 +118,98 @@ export default function Integrations() {
 
   const automationActions: AutomationAction[] = [
     {
+      integration: 'hubspot',
+      action: 'create_contact',
+      description: 'Create or update a contact in HubSpot',
+      inputs: [
+        { name: 'email', label: 'Email', type: 'email', placeholder: 'contact@example.com' },
+        { name: 'firstname', label: 'First Name', type: 'text', placeholder: 'John' },
+        { name: 'lastname', label: 'Last Name', type: 'text', placeholder: 'Doe' },
+      ],
+    },
+    {
+      integration: 'salesforce',
+      action: 'create_lead',
+      description: 'Create a lead in Salesforce',
+      inputs: [
+        { name: 'email', label: 'Email', type: 'email', placeholder: 'lead@example.com' },
+        { name: 'firstname', label: 'First Name', type: 'text', placeholder: 'Jane' },
+        { name: 'lastname', label: 'Last Name', type: 'text', placeholder: 'Smith' },
+        { name: 'company', label: 'Company', type: 'text', placeholder: 'Acme Corp' },
+      ],
+    },
+    {
+      integration: 'google-drive',
+      action: 'create_document',
+      description: 'Create a new document in Google Drive',
+      inputs: [
+        { name: 'title', label: 'Document Title', type: 'text', placeholder: 'My Document' },
+        { name: 'content', label: 'Content', type: 'textarea', placeholder: 'Document content...' },
+      ],
+    },
+    {
+      integration: 'xero',
+      action: 'create_invoice',
+      description: 'Create an invoice in Xero',
+      inputs: [
+        { name: 'contact', label: 'Customer', type: 'text', placeholder: 'Customer Name' },
+        { name: 'amount', label: 'Amount', type: 'text', placeholder: '100.00' },
+        { name: 'description', label: 'Description', type: 'text', placeholder: 'Invoice description' },
+      ],
+    },
+    {
+      integration: 'notion',
+      action: 'create_page',
+      description: 'Create a new page in Notion',
+      inputs: [
+        { name: 'title', label: 'Page Title', type: 'text', placeholder: 'My Page' },
+        { name: 'content', label: 'Content', type: 'textarea', placeholder: 'Page content...' },
+      ],
+    },
+    {
+      integration: 'asana',
+      action: 'create_task',
+      description: 'Create a task in Asana',
+      inputs: [
+        { name: 'name', label: 'Task Name', type: 'text', placeholder: 'Complete project' },
+        { name: 'notes', label: 'Description', type: 'textarea', placeholder: 'Task details...' },
+        { name: 'due_on', label: 'Due Date', type: 'text', placeholder: '2024-12-31' },
+      ],
+    },
+    {
+      integration: 'jira',
+      action: 'create_issue',
+      description: 'Create an issue in Jira',
+      inputs: [
+        { name: 'summary', label: 'Summary', type: 'text', placeholder: 'Bug in login' },
+        { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Issue details...' },
+        { name: 'type', label: 'Type', type: 'text', placeholder: 'Bug' },
+      ],
+    },
+    {
+      integration: 'gmail',
+      action: 'send',
+      description: 'Send an email via Gmail',
+      inputs: [
+        { name: 'recipient', label: 'To', type: 'email', placeholder: 'recipient@example.com' },
+        { name: 'subject', label: 'Subject', type: 'text', placeholder: 'Email subject' },
+        { name: 'body', label: 'Body', type: 'textarea', placeholder: 'Email body...' },
+      ],
+    },
+    {
+      integration: 'outlook',
+      action: 'send',
+      description: 'Send an email via Outlook',
+      inputs: [
+        { name: 'recipient', label: 'To', type: 'email', placeholder: 'recipient@example.com' },
+        { name: 'subject', label: 'Subject', type: 'text', placeholder: 'Email subject' },
+        { name: 'body', label: 'Body', type: 'textarea', placeholder: 'Email body...' },
+      ],
+    },
+    {
       integration: 'crm',
       action: 'update_contact',
-      description: 'Update a contact record',
+      description: 'Update a contact record (Legacy)',
       inputs: [
         { name: 'entity_type', label: 'Entity Type', type: 'select', placeholder: 'contact' },
         { name: 'contact_name', label: 'Contact Name', type: 'text', placeholder: 'John Doe' },
@@ -130,7 +219,7 @@ export default function Integrations() {
     {
       integration: 'email',
       action: 'send',
-      description: 'Send an email',
+      description: 'Send an email (Legacy)',
       inputs: [
         { name: 'recipient', label: 'Recipient', type: 'email', placeholder: 'recipient@example.com' },
         { name: 'subject', label: 'Subject', type: 'text', placeholder: 'Email subject' },
