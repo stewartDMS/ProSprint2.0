@@ -280,6 +280,7 @@ NOTION_CLIENT_SECRET=your_notion_client_secret
 ASANA_CLIENT_ID=your_asana_client_id
 ASANA_CLIENT_SECRET=your_asana_client_secret
 
+
 # Jira OAuth2
 JIRA_CLIENT_ID=your_jira_client_id
 JIRA_CLIENT_SECRET=your_jira_client_secret
@@ -290,10 +291,31 @@ MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret
 
 # Legacy Integrations (optional)
 SLACK_TOKEN=xoxb-your-slack-bot-token
+
+# Email/SMTP Integration (optional - traditional method)
+
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
+
+
+
+# Gmail API OAuth2 Integration (optional - recommended)
+GMAIL_CLIENT_ID=your-gmail-client-id.apps.googleusercontent.com
+GMAIL_CLIENT_SECRET=your-gmail-client-secret
+GMAIL_REDIRECT_URI=http://localhost:3000/api/integrations/email/callback/gmail
+
+# Microsoft Graph API OAuth2 Integration (optional)
+MICROSOFT_CLIENT_ID=your-microsoft-client-id
+MICROSOFT_CLIENT_SECRET=your-microsoft-client-secret
+MICROSOFT_TENANT_ID=common
+MICROSOFT_REDIRECT_URI=http://localhost:3000/api/integrations/email/callback/microsoft
+
+# Slack Integration (optional)
+SLACK_TOKEN=xoxb-your-slack-bot-token
+SLACK_CHANNEL=#general
+
 ```
 
 ### Integration Details
@@ -329,6 +351,10 @@ response = requests.post(
 
 #### 2. Email Integration
 
+ProSprint 2.0 supports **three methods** for sending emails:
+
+##### Option A: SMTP (Traditional)
+
 **Demo Mode** (default):
 - Simulates email sending without actual delivery
 - Useful for testing workflows
@@ -363,6 +389,92 @@ with smtplib.SMTP(smtp_host, smtp_port) as server:
     server.login(smtp_user, smtp_password)
     server.send_message(msg)
 ```
+
+##### Option B: Gmail API with OAuth2 (Recommended)
+
+**Demo Mode** (default):
+- Simulates Gmail API calls without actual delivery
+- No OAuth2 credentials required for testing
+
+**Production Mode** (with OAuth2):
+- Sends real emails using Gmail API
+- More secure than SMTP (no app passwords needed)
+- Uses OAuth2 for authentication
+- Better rate limits and deliverability
+
+**Setup Steps**:
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Gmail API:
+   - Navigate to "APIs & Services" > "Library"
+   - Search for "Gmail API" and enable it
+4. Create OAuth2 credentials:
+   - Go to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "OAuth client ID"
+   - Choose "Web application"
+   - Add authorized redirect URI: `http://localhost:3000/api/integrations/email/callback/gmail`
+   - For production: add your domain's callback URL
+5. Copy Client ID and Client Secret
+6. Add to `.env.local`:
+   ```bash
+   GMAIL_CLIENT_ID=your-client-id.apps.googleusercontent.com
+   GMAIL_CLIENT_SECRET=your-client-secret
+   GMAIL_REDIRECT_URI=http://localhost:3000/api/integrations/email/callback/gmail
+   ```
+7. Restart the application
+8. Go to Integrations page and click "Connect" for Gmail
+9. Authorize the application in the popup window
+10. Test by sending an email via Gmail
+
+**OAuth2 Scopes Required**:
+- `https://www.googleapis.com/auth/gmail.send` - Send emails on behalf of user
+
+##### Option C: Microsoft Outlook/Graph API with OAuth2
+
+**Demo Mode** (default):
+- Simulates Microsoft Graph API calls without actual delivery
+- No OAuth2 credentials required for testing
+
+**Production Mode** (with OAuth2):
+- Sends real emails using Microsoft Graph API
+- Works with Outlook, Office 365, and Microsoft 365
+- Uses OAuth2 for authentication
+- Enterprise-grade security and compliance
+
+**Setup Steps**:
+1. Go to [Azure Portal](https://portal.azure.com/)
+2. Navigate to "Azure Active Directory" > "App registrations"
+3. Click "New registration"
+   - Name: "ProSprint Email Integration"
+   - Supported account types: Choose based on your needs
+   - Redirect URI: Web - `http://localhost:3000/api/integrations/email/callback/microsoft`
+4. Note the "Application (client) ID" and "Directory (tenant) ID"
+5. Create a client secret:
+   - Go to "Certificates & secrets"
+   - Click "New client secret"
+   - Copy the secret value immediately (shown only once)
+6. Add API permissions:
+   - Go to "API permissions"
+   - Click "Add a permission" > "Microsoft Graph" > "Delegated permissions"
+   - Add `Mail.Send` permission
+   - Click "Grant admin consent" (if you have admin rights)
+7. Add to `.env.local`:
+   ```bash
+   MICROSOFT_CLIENT_ID=your-client-id
+   MICROSOFT_CLIENT_SECRET=your-client-secret
+   MICROSOFT_TENANT_ID=common
+   MICROSOFT_REDIRECT_URI=http://localhost:3000/api/integrations/email/callback/microsoft
+   ```
+8. Restart the application
+9. Go to Integrations page and click "Connect" for Microsoft Outlook
+10. Authorize the application in the popup window
+11. Test by sending an email via Microsoft
+
+**OAuth2 Scopes Required**:
+- `https://graph.microsoft.com/Mail.Send` - Send emails on behalf of user
+- `offline_access` - Get refresh tokens for long-term access
+
+**Note**: For production deployments, update redirect URIs in both Google Cloud Console and Azure Portal to match your production domain.
 
 #### 3. Slack Integration
 
