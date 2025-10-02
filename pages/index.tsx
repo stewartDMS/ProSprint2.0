@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
+import Navigation from '../components/Navigation';
 
 interface ApiResponse {
   message: string;
   status: string;
   timestamp: string;
   features?: string[];
-  received_data?: any;
+  received_data?: Record<string, unknown>;
 }
 
 export default function Home() {
@@ -76,12 +78,14 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main style={styles.main}>
-        <div style={styles.container}>
-          <h1 style={styles.title}>ProSprint 2.0</h1>
-          <p style={styles.subtitle}>
-            The Intelligent app that automates your business activities and makes running a business seamless
-          </p>
+      <div style={styles.page}>
+        <Navigation />
+        <main style={styles.main}>
+          <div style={styles.container}>
+            <h1 style={styles.title}>ProSprint 2.0</h1>
+            <p style={styles.subtitle}>
+              The Intelligent app that automates your business activities and makes running a business seamless
+            </p>
 
           <div style={styles.card}>
             <h2 style={styles.cardTitle}>Automation Dashboard</h2>
@@ -152,20 +156,31 @@ export default function Home() {
               This is a hybrid Next.js + Python application deployed on Vercel.
               The frontend is built with React and TypeScript, while the API routes use Python.
             </p>
+            <div style={styles.quickLinks}>
+              <Link href="/dashboard" style={styles.quickLink}>
+                Go to Dashboard →
+              </Link>
+              <Link href="/business-data" style={styles.quickLink}>
+                Enter Business Data →
+              </Link>
+            </div>
           </div>
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
     </>
   );
 }
 
 const styles: { [key: string]: React.CSSProperties } = {
-  main: {
+  page: {
     minHeight: '100vh',
     background: 'linear-gradient(to bottom, #0f172a, #1e293b)',
     color: '#f1f5f9',
-    padding: '2rem',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  },
+  main: {
+    padding: '2rem',
   },
   container: {
     maxWidth: '900px',
@@ -283,5 +298,24 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#94a3b8',
     fontSize: '0.875rem',
     lineHeight: '1.5',
+  },
+  quickLinks: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '1rem',
+    marginTop: '1.5rem',
+    flexWrap: 'wrap',
+  },
+  quickLink: {
+    textDecoration: 'none',
+    color: '#60a5fa',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '8px',
+    border: '1px solid rgba(96, 165, 250, 0.3)',
+    background: 'rgba(96, 165, 250, 0.1)',
+    fontSize: '1rem',
+    fontWeight: '600',
+    transition: 'all 0.2s',
+    display: 'inline-block',
   },
 };
