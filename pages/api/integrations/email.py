@@ -39,7 +39,7 @@ class handler(BaseHTTPRequestHandler):
     def _get_gmail_auth_url(self):
         """Generate Gmail OAuth2 authorization URL."""
         client_id = os.getenv('GMAIL_CLIENT_ID', '')
-        redirect_uri = os.getenv('GMAIL_REDIRECT_URI', 'http://localhost:3000/api/integrations/email/callback/gmail')
+        redirect_uri = os.getenv('GMAIL_REDIRECT_URI', 'https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail')
         
         # Gmail OAuth2 scopes for sending emails
         scopes = 'https://www.googleapis.com/auth/gmail.send'
@@ -61,7 +61,7 @@ class handler(BaseHTTPRequestHandler):
         """Generate Microsoft OAuth2 authorization URL."""
         client_id = os.getenv('MICROSOFT_CLIENT_ID', '')
         tenant_id = os.getenv('MICROSOFT_TENANT_ID', 'common')
-        redirect_uri = os.getenv('MICROSOFT_REDIRECT_URI', 'http://localhost:3000/api/integrations/email/callback/microsoft')
+        redirect_uri = os.getenv('MICROSOFT_REDIRECT_URI', 'https://pro-sprint-ai.vercel.app/api/integrations/email/callback/microsoft')
         
         # Microsoft Graph API scopes for sending emails
         scopes = 'https://graph.microsoft.com/Mail.Send offline_access'

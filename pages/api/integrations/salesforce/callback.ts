@@ -30,7 +30,7 @@ export default async function handler(
             grant_type: 'authorization_code',
             client_id: process.env.SALESFORCE_CLIENT_ID!,
             client_secret: process.env.SALESFORCE_CLIENT_SECRET!,
-            redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/salesforce/callback`,
+            redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/salesforce/callback`,
             code,
           }),
         });

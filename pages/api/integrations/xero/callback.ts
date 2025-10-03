@@ -27,7 +27,7 @@ export default async function handler(
           body: new URLSearchParams({
             grant_type: 'authorization_code',
             code,
-            redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/xero/callback`,
+            redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/xero/callback`,
           }),
         });
         

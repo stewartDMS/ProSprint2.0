@@ -27,7 +27,7 @@ export default async function handler(
             client_id: process.env.SLACK_CLIENT_ID!,
             client_secret: process.env.SLACK_CLIENT_SECRET!,
             code,
-            redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/slack/callback`,
+            redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/slack/callback`,
           }),
         });
         

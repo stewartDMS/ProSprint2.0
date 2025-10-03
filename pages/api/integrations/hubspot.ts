@@ -32,7 +32,7 @@ export default async function handler(
       // Initiate OAuth flow
       if (isConfigured) {
         const clientId = process.env.HUBSPOT_CLIENT_ID;
-        const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/hubspot/callback`;
+        const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/hubspot/callback`;
         const scope = 'crm.objects.contacts.read crm.objects.contacts.write crm.objects.companies.read crm.objects.companies.write crm.objects.deals.read crm.objects.deals.write';
         
         const authUrl = `https://app.hubspot.com/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
@@ -71,7 +71,7 @@ export default async function handler(
               grant_type: 'authorization_code',
               client_id: process.env.HUBSPOT_CLIENT_ID!,
               client_secret: process.env.HUBSPOT_CLIENT_SECRET!,
-              redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/hubspot/callback`,
+              redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/hubspot/callback`,
               code,
             }),
           });
