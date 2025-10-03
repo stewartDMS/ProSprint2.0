@@ -39,7 +39,7 @@ class handler(BaseHTTPRequestHandler):
     def _get_gmail_auth_url(self):
         """Generate Gmail OAuth2 authorization URL."""
         client_id = os.getenv('GMAIL_CLIENT_ID', '')
-        redirect_uri = os.getenv('GMAIL_REDIRECT_URI', 'https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail')
+        redirect_uri = os.getenv('GMAIL_REDIRECT_URI', 'https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback')
         
         # Gmail OAuth2 scopes for sending emails
         scopes = 'https://www.googleapis.com/auth/gmail.send'

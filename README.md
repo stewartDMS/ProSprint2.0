@@ -304,7 +304,7 @@ SMTP_PASSWORD=your-app-password
 # Gmail API OAuth2 Integration (optional - recommended)
 GMAIL_CLIENT_ID=your-gmail-client-id.apps.googleusercontent.com
 GMAIL_CLIENT_SECRET=your-gmail-client-secret
-GMAIL_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail
+GMAIL_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback
 
 # Microsoft Graph API OAuth2 Integration (optional)
 MICROSOFT_CLIENT_ID=your-microsoft-client-id
@@ -412,14 +412,14 @@ with smtplib.SMTP(smtp_host, smtp_port) as server:
    - Go to "APIs & Services" > "Credentials"
    - Click "Create Credentials" > "OAuth client ID"
    - Choose "Web application"
-   - Add authorized redirect URI: `https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail`
-   - For local development: also add `http://localhost:3000/api/integrations/email/callback/gmail`
+   - Add authorized redirect URI: `https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback`
+   - For local development: also add `http://localhost:3000/api/integrations/gmail/callback`
 5. Copy Client ID and Client Secret
 6. Add to `.env.local`:
    ```bash
    GMAIL_CLIENT_ID=your-client-id.apps.googleusercontent.com
    GMAIL_CLIENT_SECRET=your-client-secret
-   GMAIL_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail
+   GMAIL_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback
    ```
 7. Restart the application
 8. Go to Integrations page and click "Connect" for Gmail
@@ -685,9 +685,10 @@ NEXT_PUBLIC_BASE_URL=https://pro-sprint-ai.vercel.app  # Production Vercel domai
 4. Go to Credentials → Create Credentials → OAuth 2.0 Client ID
 5. Set Application type: Web application
 6. Add Authorized redirect URIs:
-   - `https://pro-sprint-ai.vercel.app/api/integrations/google/callback`
-   - `https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback`
-   - For local development: also add `http://localhost:3000/api/integrations/google/callback` and `http://localhost:3000/api/integrations/gmail/callback`
+   - For production: `https://pro-sprint-ai.vercel.app/api/integrations/google/callback`
+   - For production: `https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback`
+   - For local development: `http://localhost:3000/api/integrations/google/callback`
+   - For local development: `http://localhost:3000/api/integrations/gmail/callback`
 7. Copy Client ID and Client Secret
 8. Add same credentials for both GOOGLE_CLIENT_ID and GMAIL_CLIENT_ID
 
