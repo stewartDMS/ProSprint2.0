@@ -30,7 +30,7 @@ export default async function handler(
     if (action === 'connect') {
       if (isConfigured) {
         const clientId = process.env.JIRA_CLIENT_ID;
-        const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/jira?action=callback`;
+        const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/jira/callback`;
         const scope = 'read:jira-work write:jira-work manage:jira-project';
         
         const authUrl = `https://auth.atlassian.com/authorize?audience=api.atlassian.com&client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&prompt=consent`;
@@ -67,7 +67,7 @@ export default async function handler(
               client_id: process.env.JIRA_CLIENT_ID!,
               client_secret: process.env.JIRA_CLIENT_SECRET!,
               code,
-              redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/jira?action=callback`,
+              redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/jira/callback`,
             }),
           });
           

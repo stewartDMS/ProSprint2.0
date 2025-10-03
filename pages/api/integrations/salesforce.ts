@@ -30,7 +30,7 @@ export default async function handler(
     if (action === 'connect') {
       if (isConfigured) {
         const clientId = process.env.SALESFORCE_CLIENT_ID;
-        const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/salesforce?action=callback`;
+        const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/salesforce/callback`;
         
         // Use login.salesforce.com for production or test.salesforce.com for sandbox
         const baseUrl = process.env.SALESFORCE_SANDBOX === 'true' ? 'https://test.salesforce.com' : 'https://login.salesforce.com';
@@ -70,7 +70,7 @@ export default async function handler(
               grant_type: 'authorization_code',
               client_id: process.env.SALESFORCE_CLIENT_ID!,
               client_secret: process.env.SALESFORCE_CLIENT_SECRET!,
-              redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/salesforce?action=callback`,
+              redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/salesforce/callback`,
               code,
             }),
           });

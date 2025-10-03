@@ -580,12 +580,82 @@ curl -X POST http://localhost:3000/api/integrations/slack \
 
 ### OAuth2 Integration Setup Guide
 
+#### OAuth2 Callback Routes
+
+ProSprint 2.0 uses dedicated OAuth2 callback routes for each integration to handle the authorization code exchange securely. Each callback route:
+
+- Accepts the OAuth2 authorization code and state from the provider
+- Exchanges the code for access and refresh tokens using client credentials from environment variables
+- Stores tokens securely in memory (demo) or database (production)
+- Redirects to the frontend with connection status for smooth user experience
+
+**Callback Route URLs:**
+
+| Integration | Callback Route |
+|------------|----------------|
+| Google Drive | `/api/integrations/google/callback` |
+| Gmail | `/api/integrations/gmail/callback` |
+| Microsoft Outlook | `/api/integrations/outlook/callback` |
+| HubSpot | `/api/integrations/hubspot/callback` |
+| Salesforce | `/api/integrations/salesforce/callback` |
+| Xero | `/api/integrations/xero/callback` |
+| Notion | `/api/integrations/notion/callback` |
+| Asana | `/api/integrations/asana/callback` |
+| Jira | `/api/integrations/jira/callback` |
+| Slack | `/api/integrations/slack/callback` |
+
+**Required Environment Variables by Integration:**
+
+```bash
+# Google Drive & Gmail
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GMAIL_CLIENT_ID=your_google_client_id
+GMAIL_CLIENT_SECRET=your_google_client_secret
+
+# Microsoft Outlook
+MICROSOFT_CLIENT_ID=your_microsoft_client_id
+MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret
+
+# HubSpot
+HUBSPOT_CLIENT_ID=your_hubspot_client_id
+HUBSPOT_CLIENT_SECRET=your_hubspot_client_secret
+
+# Salesforce
+SALESFORCE_CLIENT_ID=your_salesforce_client_id
+SALESFORCE_CLIENT_SECRET=your_salesforce_client_secret
+SALESFORCE_SANDBOX=false  # Set to true for sandbox environment
+
+# Xero
+XERO_CLIENT_ID=your_xero_client_id
+XERO_CLIENT_SECRET=your_xero_client_secret
+
+# Notion
+NOTION_CLIENT_ID=your_notion_client_id
+NOTION_CLIENT_SECRET=your_notion_client_secret
+
+# Asana
+ASANA_CLIENT_ID=your_asana_client_id
+ASANA_CLIENT_SECRET=your_asana_client_secret
+
+# Jira
+JIRA_CLIENT_ID=your_jira_client_id
+JIRA_CLIENT_SECRET=your_jira_client_secret
+
+# Slack (OAuth2)
+SLACK_CLIENT_ID=your_slack_client_id
+SLACK_CLIENT_SECRET=your_slack_client_secret
+
+# Base URL (important for OAuth callbacks)
+NEXT_PUBLIC_BASE_URL=http://localhost:3000  # Change to your deployment URL in production
+```
+
 #### HubSpot Setup
 
 1. Go to [HubSpot Developer Portal](https://developers.hubspot.com/)
 2. Create a new app or select existing app
 3. Navigate to "Auth" tab
-4. Set redirect URL: `http://localhost:3000/api/integrations/hubspot?action=callback`
+4. Set redirect URL: `http://localhost:3000/api/integrations/hubspot/callback`
 5. Copy Client ID and Client Secret
 6. Add required scopes: `crm.objects.contacts.read`, `crm.objects.contacts.write`, `crm.objects.companies.read`, `crm.objects.companies.write`, `crm.objects.deals.read`, `crm.objects.deals.write`
 7. Add credentials to `.env.local`
@@ -597,7 +667,7 @@ curl -X POST http://localhost:3000/api/integrations/slack \
 1. Log in to [Salesforce](https://login.salesforce.com/) (or [Sandbox](https://test.salesforce.com/))
 2. Go to Setup → Apps → App Manager → New Connected App
 3. Enable OAuth Settings
-4. Set Callback URL: `http://localhost:3000/api/integrations/salesforce?action=callback`
+4. Set Callback URL: `http://localhost:3000/api/integrations/salesforce/callback`
 5. Select OAuth Scopes: Full access (or customize as needed)
 6. Copy Consumer Key (Client ID) and Consumer Secret
 7. Add credentials to `.env.local`
@@ -612,8 +682,8 @@ curl -X POST http://localhost:3000/api/integrations/slack \
 4. Go to Credentials → Create Credentials → OAuth 2.0 Client ID
 5. Set Application type: Web application
 6. Add Authorized redirect URIs:
-   - `http://localhost:3000/api/integrations/google-drive?action=callback`
-   - `http://localhost:3000/api/integrations/gmail?action=callback`
+   - `http://localhost:3000/api/integrations/google/callback`
+   - `http://localhost:3000/api/integrations/gmail/callback`
 7. Copy Client ID and Client Secret
 8. Add same credentials for both GOOGLE_CLIENT_ID and GMAIL_CLIENT_ID
 
@@ -623,7 +693,7 @@ curl -X POST http://localhost:3000/api/integrations/slack \
 
 1. Go to [Xero Developer Portal](https://developer.xero.com/)
 2. Create a new app → OAuth 2.0 app
-3. Set Redirect URI: `http://localhost:3000/api/integrations/xero?action=callback`
+3. Set Redirect URI: `http://localhost:3000/api/integrations/xero/callback`
 4. Copy Client ID and Client Secret
 5. Add credentials to `.env.local`
 
@@ -635,7 +705,7 @@ curl -X POST http://localhost:3000/api/integrations/slack \
 2. Create a new integration
 3. Copy the Internal Integration Token (this is your Client Secret)
 4. For OAuth: Go to Distribution → Public integration
-5. Set Redirect URI: `http://localhost:3000/api/integrations/notion?action=callback`
+5. Set Redirect URI: `http://localhost:3000/api/integrations/notion/callback`
 6. Copy OAuth client ID and secret
 7. Add credentials to `.env.local`
 
@@ -645,7 +715,7 @@ curl -X POST http://localhost:3000/api/integrations/slack \
 
 1. Go to [Asana Developer Console](https://app.asana.com/0/my-apps)
 2. Create a new app
-3. Set Redirect URL: `http://localhost:3000/api/integrations/asana?action=callback`
+3. Set Redirect URL: `http://localhost:3000/api/integrations/asana/callback`
 4. Copy Client ID and Client Secret
 5. Add credentials to `.env.local`
 
@@ -655,7 +725,7 @@ curl -X POST http://localhost:3000/api/integrations/slack \
 
 1. Go to [Atlassian Developer Console](https://developer.atlassian.com/console/myapps/)
 2. Create a new OAuth 2.0 app
-3. Add Callback URL: `http://localhost:3000/api/integrations/jira?action=callback`
+3. Add Callback URL: `http://localhost:3000/api/integrations/jira/callback`
 4. Enable Jira API
 5. Add permissions: `read:jira-work`, `write:jira-work`, `manage:jira-project`
 6. Copy Client ID and Client Secret
@@ -668,7 +738,7 @@ curl -X POST http://localhost:3000/api/integrations/slack \
 1. Go to [Azure Portal](https://portal.azure.com/)
 2. Navigate to Azure Active Directory → App registrations
 3. Create New registration
-4. Set Redirect URI (Web): `http://localhost:3000/api/integrations/outlook?action=callback`
+4. Set Redirect URI (Web): `http://localhost:3000/api/integrations/outlook/callback`
 5. Go to Certificates & secrets → New client secret
 6. Copy Application (client) ID and client secret value
 7. Go to API permissions → Add: `Mail.Send`, `Mail.Read`

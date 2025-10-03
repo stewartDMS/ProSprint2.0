@@ -30,7 +30,7 @@ export default async function handler(
     if (action === 'connect') {
       if (isConfigured) {
         const clientId = process.env.XERO_CLIENT_ID;
-        const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/xero?action=callback`;
+        const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/xero/callback`;
         const scope = 'openid profile email accounting.transactions accounting.contacts accounting.settings';
         
         const authUrl = `https://login.xero.com/identity/connect/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`;
@@ -66,7 +66,7 @@ export default async function handler(
             body: new URLSearchParams({
               grant_type: 'authorization_code',
               code,
-              redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/xero?action=callback`,
+              redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/xero/callback`,
             }),
           });
           
