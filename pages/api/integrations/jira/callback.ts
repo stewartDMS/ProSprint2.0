@@ -28,7 +28,7 @@ export default async function handler(
             client_id: process.env.JIRA_CLIENT_ID!,
             client_secret: process.env.JIRA_CLIENT_SECRET!,
             code,
-            redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/jira/callback`,
+            redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/jira/callback`,
           }),
         });
         

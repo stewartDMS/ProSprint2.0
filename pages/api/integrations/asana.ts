@@ -30,7 +30,7 @@ export default async function handler(
     if (action === 'connect') {
       if (isConfigured) {
         const clientId = process.env.ASANA_CLIENT_ID;
-        const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/asana/callback`;
+        const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/asana/callback`;
         
         const authUrl = `https://app.asana.com/-/oauth_authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
         
@@ -65,7 +65,7 @@ export default async function handler(
               grant_type: 'authorization_code',
               client_id: process.env.ASANA_CLIENT_ID!,
               client_secret: process.env.ASANA_CLIENT_SECRET!,
-              redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/integrations/asana/callback`,
+              redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/asana/callback`,
               code,
             }),
           });

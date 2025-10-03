@@ -248,7 +248,7 @@ Create a `.env.local` file in the project root and add your OAuth credentials:
 
 ```bash
 # Base URL (important for OAuth callbacks)
-NEXT_PUBLIC_BASE_URL=http://localhost:3000  # Change to your deployment URL in production
+NEXT_PUBLIC_BASE_URL=https://pro-sprint-ai.vercel.app  # Production Vercel domain
 
 # OpenAI API (required for AI features)
 OPENAI_API_KEY=your_openai_api_key_here
@@ -304,13 +304,13 @@ SMTP_PASSWORD=your-app-password
 # Gmail API OAuth2 Integration (optional - recommended)
 GMAIL_CLIENT_ID=your-gmail-client-id.apps.googleusercontent.com
 GMAIL_CLIENT_SECRET=your-gmail-client-secret
-GMAIL_REDIRECT_URI=http://localhost:3000/api/integrations/email/callback/gmail
+GMAIL_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail
 
 # Microsoft Graph API OAuth2 Integration (optional)
 MICROSOFT_CLIENT_ID=your-microsoft-client-id
 MICROSOFT_CLIENT_SECRET=your-microsoft-client-secret
 MICROSOFT_TENANT_ID=common
-MICROSOFT_REDIRECT_URI=http://localhost:3000/api/integrations/email/callback/microsoft
+MICROSOFT_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/email/callback/microsoft
 
 # Slack Integration (optional)
 SLACK_TOKEN=xoxb-your-slack-bot-token
@@ -412,14 +412,14 @@ with smtplib.SMTP(smtp_host, smtp_port) as server:
    - Go to "APIs & Services" > "Credentials"
    - Click "Create Credentials" > "OAuth client ID"
    - Choose "Web application"
-   - Add authorized redirect URI: `http://localhost:3000/api/integrations/email/callback/gmail`
-   - For production: add your domain's callback URL
+   - Add authorized redirect URI: `https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail`
+   - For local development: also add `http://localhost:3000/api/integrations/email/callback/gmail`
 5. Copy Client ID and Client Secret
 6. Add to `.env.local`:
    ```bash
    GMAIL_CLIENT_ID=your-client-id.apps.googleusercontent.com
    GMAIL_CLIENT_SECRET=your-client-secret
-   GMAIL_REDIRECT_URI=http://localhost:3000/api/integrations/email/callback/gmail
+   GMAIL_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail
    ```
 7. Restart the application
 8. Go to Integrations page and click "Connect" for Gmail
@@ -447,7 +447,8 @@ with smtplib.SMTP(smtp_host, smtp_port) as server:
 3. Click "New registration"
    - Name: "ProSprint Email Integration"
    - Supported account types: Choose based on your needs
-   - Redirect URI: Web - `http://localhost:3000/api/integrations/email/callback/microsoft`
+   - Redirect URI: Web - `https://pro-sprint-ai.vercel.app/api/integrations/email/callback/microsoft`
+   - For local development: also add `http://localhost:3000/api/integrations/email/callback/microsoft`
 4. Note the "Application (client) ID" and "Directory (tenant) ID"
 5. Create a client secret:
    - Go to "Certificates & secrets"
@@ -463,7 +464,7 @@ with smtplib.SMTP(smtp_host, smtp_port) as server:
    MICROSOFT_CLIENT_ID=your-client-id
    MICROSOFT_CLIENT_SECRET=your-client-secret
    MICROSOFT_TENANT_ID=common
-   MICROSOFT_REDIRECT_URI=http://localhost:3000/api/integrations/email/callback/microsoft
+   MICROSOFT_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/email/callback/microsoft
    ```
 8. Restart the application
 9. Go to Integrations page and click "Connect" for Microsoft Outlook
@@ -566,10 +567,10 @@ Direct API calls for programmatic access:
 
 ```bash
 # Get integration status
-curl http://localhost:3000/api/integrations/email
+curl https://pro-sprint-ai.vercel.app/api/integrations/email
 
 # Trigger automation
-curl -X POST http://localhost:3000/api/integrations/slack \
+curl -X POST https://pro-sprint-ai.vercel.app/api/integrations/slack \
   -H "Content-Type: application/json" \
   -d '{
     "action": "post_message",
@@ -647,7 +648,7 @@ SLACK_CLIENT_ID=your_slack_client_id
 SLACK_CLIENT_SECRET=your_slack_client_secret
 
 # Base URL (important for OAuth callbacks)
-NEXT_PUBLIC_BASE_URL=http://localhost:3000  # Change to your deployment URL in production
+NEXT_PUBLIC_BASE_URL=https://pro-sprint-ai.vercel.app  # Production Vercel domain
 ```
 
 #### HubSpot Setup
@@ -655,7 +656,8 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000  # Change to your deployment URL in p
 1. Go to [HubSpot Developer Portal](https://developers.hubspot.com/)
 2. Create a new app or select existing app
 3. Navigate to "Auth" tab
-4. Set redirect URL: `http://localhost:3000/api/integrations/hubspot/callback`
+4. Set redirect URL: `https://pro-sprint-ai.vercel.app/api/integrations/hubspot/callback`
+   - For local development: also add `http://localhost:3000/api/integrations/hubspot/callback`
 5. Copy Client ID and Client Secret
 6. Add required scopes: `crm.objects.contacts.read`, `crm.objects.contacts.write`, `crm.objects.companies.read`, `crm.objects.companies.write`, `crm.objects.deals.read`, `crm.objects.deals.write`
 7. Add credentials to `.env.local`
@@ -667,7 +669,8 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000  # Change to your deployment URL in p
 1. Log in to [Salesforce](https://login.salesforce.com/) (or [Sandbox](https://test.salesforce.com/))
 2. Go to Setup → Apps → App Manager → New Connected App
 3. Enable OAuth Settings
-4. Set Callback URL: `http://localhost:3000/api/integrations/salesforce/callback`
+4. Set Callback URL: `https://pro-sprint-ai.vercel.app/api/integrations/salesforce/callback`
+   - For local development: also add `http://localhost:3000/api/integrations/salesforce/callback`
 5. Select OAuth Scopes: Full access (or customize as needed)
 6. Copy Consumer Key (Client ID) and Consumer Secret
 7. Add credentials to `.env.local`
@@ -682,8 +685,9 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000  # Change to your deployment URL in p
 4. Go to Credentials → Create Credentials → OAuth 2.0 Client ID
 5. Set Application type: Web application
 6. Add Authorized redirect URIs:
-   - `http://localhost:3000/api/integrations/google/callback`
-   - `http://localhost:3000/api/integrations/gmail/callback`
+   - `https://pro-sprint-ai.vercel.app/api/integrations/google/callback`
+   - `https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback`
+   - For local development: also add `http://localhost:3000/api/integrations/google/callback` and `http://localhost:3000/api/integrations/gmail/callback`
 7. Copy Client ID and Client Secret
 8. Add same credentials for both GOOGLE_CLIENT_ID and GMAIL_CLIENT_ID
 
@@ -693,7 +697,8 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000  # Change to your deployment URL in p
 
 1. Go to [Xero Developer Portal](https://developer.xero.com/)
 2. Create a new app → OAuth 2.0 app
-3. Set Redirect URI: `http://localhost:3000/api/integrations/xero/callback`
+3. Set Redirect URI: `https://pro-sprint-ai.vercel.app/api/integrations/xero/callback`
+   - For local development: also add `http://localhost:3000/api/integrations/xero/callback`
 4. Copy Client ID and Client Secret
 5. Add credentials to `.env.local`
 
@@ -705,7 +710,8 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000  # Change to your deployment URL in p
 2. Create a new integration
 3. Copy the Internal Integration Token (this is your Client Secret)
 4. For OAuth: Go to Distribution → Public integration
-5. Set Redirect URI: `http://localhost:3000/api/integrations/notion/callback`
+5. Set Redirect URI: `https://pro-sprint-ai.vercel.app/api/integrations/notion/callback`
+   - For local development: also add `http://localhost:3000/api/integrations/notion/callback`
 6. Copy OAuth client ID and secret
 7. Add credentials to `.env.local`
 
@@ -715,7 +721,8 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000  # Change to your deployment URL in p
 
 1. Go to [Asana Developer Console](https://app.asana.com/0/my-apps)
 2. Create a new app
-3. Set Redirect URL: `http://localhost:3000/api/integrations/asana/callback`
+3. Set Redirect URL: `https://pro-sprint-ai.vercel.app/api/integrations/asana/callback`
+   - For local development: also add `http://localhost:3000/api/integrations/asana/callback`
 4. Copy Client ID and Client Secret
 5. Add credentials to `.env.local`
 
@@ -725,7 +732,8 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000  # Change to your deployment URL in p
 
 1. Go to [Atlassian Developer Console](https://developer.atlassian.com/console/myapps/)
 2. Create a new OAuth 2.0 app
-3. Add Callback URL: `http://localhost:3000/api/integrations/jira/callback`
+3. Add Callback URL: `https://pro-sprint-ai.vercel.app/api/integrations/jira/callback`
+   - For local development: also add `http://localhost:3000/api/integrations/jira/callback`
 4. Enable Jira API
 5. Add permissions: `read:jira-work`, `write:jira-work`, `manage:jira-project`
 6. Copy Client ID and Client Secret
@@ -738,7 +746,8 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000  # Change to your deployment URL in p
 1. Go to [Azure Portal](https://portal.azure.com/)
 2. Navigate to Azure Active Directory → App registrations
 3. Create New registration
-4. Set Redirect URI (Web): `http://localhost:3000/api/integrations/outlook/callback`
+4. Set Redirect URI (Web): `https://pro-sprint-ai.vercel.app/api/integrations/outlook/callback`
+   - For local development: also add `http://localhost:3000/api/integrations/outlook/callback`
 5. Go to Certificates & secrets → New client secret
 6. Copy Application (client) ID and client secret value
 7. Go to API permissions → Add: `Mail.Send`, `Mail.Read`
