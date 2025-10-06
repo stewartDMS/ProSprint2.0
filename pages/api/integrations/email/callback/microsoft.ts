@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { tokenStorage } from '../../utils/tokenStorage';
+import { tokenStorage } from '../../../utils/tokenStorage';
 
 export default async function handler(
   req: NextApiRequest,
@@ -27,7 +27,7 @@ export default async function handler(
             grant_type: 'authorization_code',
             client_id: process.env.MICROSOFT_CLIENT_ID!,
             client_secret: process.env.MICROSOFT_CLIENT_SECRET!,
-            redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/outlook/callback`,
+            redirect_uri: process.env.MICROSOFT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/email/callback/microsoft`,
             code,
           }),
         });
