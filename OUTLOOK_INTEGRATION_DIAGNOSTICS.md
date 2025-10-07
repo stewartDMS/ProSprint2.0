@@ -228,10 +228,19 @@ The logging implementation includes:
 
 ### Potential Issues with Multiple Callback Handlers
 There appear to be two callback handlers:
-1. `/api/integrations/email/callback/microsoft` (updated with diagnostics)
-2. `/api/integrations/outlook/callback` (not updated)
+1. `/api/integrations/email/callback/microsoft` (updated with diagnostics - **PRIMARY HANDLER**)
+2. `/api/integrations/outlook/callback` (legacy handler - not recommended)
 
-**Recommendation**: Verify which callback URL is registered in Azure AD and ensure it points to the correct handler. Consider consolidating to a single callback handler to avoid confusion.
+**IMPORTANT FIX APPLIED**: The redirect URIs in the OAuth authorization flows have been updated to use the correct callback handler:
+- `pages/api/integrations/email.ts` - Now uses `MICROSOFT_REDIRECT_URI` environment variable or defaults to `/api/integrations/email/callback/microsoft`
+- `pages/api/integrations/outlook.ts` - Now uses `MICROSOFT_REDIRECT_URI` environment variable or defaults to `/api/integrations/email/callback/microsoft`
+
+**Root Cause Identified**: The previous code was using `/api/integrations/outlook/callback` in the authorization flow, but this didn't match the recommended redirect URI in `.env.example`. This mismatch would cause Microsoft to reject the token exchange with a "redirect_uri mismatch" error.
+
+**Recommendation**: 
+1. Register `/api/integrations/email/callback/microsoft` as the redirect URI in Azure AD
+2. Set `MICROSOFT_REDIRECT_URI` in your environment variables to match exactly what's registered in Azure AD
+3. The legacy `/api/integrations/outlook/callback` handler should be considered deprecated
 
 ## Next Steps for Production
 
