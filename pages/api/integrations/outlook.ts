@@ -30,7 +30,10 @@ export default async function handler(
     if (action === 'connect') {
       if (isConfigured) {
         const clientId = process.env.MICROSOFT_CLIENT_ID;
+
         // Use MICROSOFT_REDIRECT_URI if set, otherwise use default
+
+
         const redirectUri = process.env.MICROSOFT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/email/callback/microsoft`;
         const scope = 'https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/Mail.Read offline_access';
         
@@ -67,7 +70,7 @@ export default async function handler(
               grant_type: 'authorization_code',
               client_id: process.env.MICROSOFT_CLIENT_ID!,
               client_secret: process.env.MICROSOFT_CLIENT_SECRET!,
-              redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/outlook/callback`,
+              redirect_uri: process.env.MICROSOFT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/email/callback/microsoft`,
               code,
             }),
           });

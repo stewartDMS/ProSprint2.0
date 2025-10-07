@@ -596,7 +596,7 @@ ProSprint 2.0 uses dedicated OAuth2 callback routes for each integration to hand
 |------------|----------------|
 | Google Drive | `/api/integrations/google/callback` |
 | Gmail | `/api/integrations/gmail/callback` |
-| Microsoft Outlook | `/api/integrations/outlook/callback` |
+| Microsoft Outlook | `/api/integrations/email/callback/microsoft` |
 | HubSpot | `/api/integrations/hubspot/callback` |
 | Salesforce | `/api/integrations/salesforce/callback` |
 | Xero | `/api/integrations/xero/callback` |
@@ -747,8 +747,8 @@ NEXT_PUBLIC_BASE_URL=https://pro-sprint-ai.vercel.app  # Production Vercel domai
 1. Go to [Azure Portal](https://portal.azure.com/)
 2. Navigate to Azure Active Directory → App registrations
 3. Create New registration
-4. Set Redirect URI (Web): `https://pro-sprint-ai.vercel.app/api/integrations/outlook/callback`
-   - For local development: also add `http://localhost:3000/api/integrations/outlook/callback`
+4. Set Redirect URI (Web): `https://pro-sprint-ai.vercel.app/api/integrations/email/callback/microsoft`
+   - For local development: also add `http://localhost:3000/api/integrations/email/callback/microsoft`
 5. Go to Certificates & secrets → New client secret
 6. Copy Application (client) ID and client secret value
 7. Go to API permissions → Add: `Mail.Send`, `Mail.Read`
