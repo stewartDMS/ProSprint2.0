@@ -29,8 +29,9 @@ export default async function handler(
     timestamp: new Date().toISOString(),
   });
   
-  // TODO: In production, get user ID from authenticated session
-  // Currently using 'default' for demo/development purposes
+  // TODO: PRODUCTION REQUIRED - Replace with actual user authentication
+  // Get user ID from authenticated session (e.g., JWT token, session cookie)
+  // This hardcoded value is temporary and must be replaced before production deployment
   const userId = 'default';
   
   // Verify and log environment variables
@@ -45,8 +46,18 @@ export default async function handler(
     timestamp: new Date().toISOString(),
   });
   
-  // Check if Microsoft OAuth2 credentials are configured
-  const isConfigured = Boolean(clientId && clientSecret);
+  // Validate that all required environment variables are present
+  if (!clientId || !clientSecret) {
+    console.error('[Microsoft OAuth Callback] Missing required environment variables:', {
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret,
+      timestamp: new Date().toISOString(),
+    });
+    const errorMessage = encodeURIComponent('Server configuration error: Microsoft OAuth credentials not configured');
+    res.writeHead(302, { Location: `/integrations?error=outlook&message=${errorMessage}` });
+    res.end();
+    return;
+  }
 
   if (method === 'GET') {
     const code = query.code as string;
@@ -66,11 +77,16 @@ export default async function handler(
       return;
     }
     
-    // TODO: Add CSRF state validation
+    // TODO: PRODUCTION SECURITY - Implement CSRF state parameter validation
     // const state = query.state as string;
-    // Verify state matches the one sent in authorization request
+    // if (!state || state !== getStoredState(userId)) {
+    //   console.error('[Microsoft OAuth Callback] CSRF state validation failed');
+    //   res.writeHead(302, { Location: '/integrations?error=outlook&message=Invalid+state+parameter' });
+    //   res.end();
+    //   return;
+    // }
     
-    if (code && isConfigured) {
+    if (code) {
       console.log('[Microsoft OAuth Callback] Starting token exchange:', {
         codeLength: code.length,
         timestamp: new Date().toISOString(),
@@ -124,15 +140,18 @@ export default async function handler(
             timestamp: new Date().toISOString(),
           });
           
-          // TODO: Production improvements for token storage:
-          // - Encrypt tokens before storing
-          // - Store in secure database instead of in-memory
-          // - Associate with authenticated user ID
-          // - Store token metadata (scopes, issued_at, etc.)
-          // - Implement automatic token refresh before expiration
+          // TODO: PRODUCTION SECURITY - Token storage improvements required:
+          // 1. Encrypt tokens at rest using AES-256 or similar
+          // 2. Store in secure database (PostgreSQL, MongoDB) with encrypted fields
+          // 3. Associate tokens with authenticated user ID from session
+          // 4. Store additional metadata: issued_at, last_used, ip_address
+          // 5. Implement automatic token refresh 5 minutes before expiration
+          // 6. Add token rotation policy and revocation support
+          // 7. Log all token access for security audit trail
           
-          // Store token securely using tokenStorage utility
-          // This is a placeholder - in production, use encrypted database storage
+          // PLACEHOLDER: Using in-memory storage utility for development
+          // This implementation loses all tokens on server restart
+          // Replace with encrypted database storage before production deployment
           tokenStorage.store('outlook', userId, {
             access_token: tokenData.access_token,
             refresh_token: tokenData.refresh_token,
@@ -143,10 +162,12 @@ export default async function handler(
           
           console.log('[Microsoft OAuth Callback] Token stored successfully, redirecting to success page');
           
-          // TODO: Production enhancements:
-          // - Log successful OAuth connection for audit trail
-          // - Send notification to user about new connection
-          // - Update user preferences/settings
+          // TODO: PRODUCTION ENHANCEMENTS:
+          // - Add audit log entry for OAuth connection with user_id, ip_address, timestamp
+          // - Send email/notification to user about new Outlook integration
+          // - Update user preferences/settings database
+          // - Trigger initial sync of email metadata if applicable
+          // - Set up webhook subscriptions for real-time email notifications
           
           // Redirect to integrations page with success indicator
           res.writeHead(302, { Location: '/integrations?connected=outlook' });
@@ -189,7 +210,10 @@ export default async function handler(
         res.end();
         return;
       }
-    } else if (!code) {
+    }
+    
+    // Handle missing authorization code
+    if (!code) {
       console.warn('[Microsoft OAuth Callback] Missing authorization code:', {
         queryParams: JSON.stringify(query),
         timestamp: new Date().toISOString(),
@@ -198,20 +222,10 @@ export default async function handler(
       res.writeHead(302, { Location: `/integrations?error=outlook&message=${errorMessage}` });
       res.end();
       return;
-    } else if (!isConfigured) {
-      console.error('[Microsoft OAuth Callback] Configuration error:', {
-        hasClientId: !!clientId,
-        hasClientSecret: !!clientSecret,
-        timestamp: new Date().toISOString(),
-      });
-      const errorMessage = encodeURIComponent('Microsoft OAuth not configured - missing client credentials');
-      res.writeHead(302, { Location: `/integrations?error=outlook&message=${errorMessage}` });
-      res.end();
-      return;
     }
     
-    // Fallback for unexpected error state
-    console.error('[Microsoft OAuth Callback] Unexpected error state reached');
+    // If we reach here, something unexpected happened
+    console.error('[Microsoft OAuth Callback] Unexpected state: should not reach this point');
     res.writeHead(302, { Location: '/integrations?error=outlook&message=Unexpected+error+state' });
     res.end();
   } else {
