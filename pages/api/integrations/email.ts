@@ -96,7 +96,7 @@ export default async function handler(
       // Handle Outlook OAuth2 flow
       if (outlookConfigured) {
         const clientId = process.env.MICROSOFT_CLIENT_ID;
-        const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/outlook/callback`;
+        const redirectUri = process.env.MICROSOFT_REDIRECT_URI || `${process.env.NEXT_PUBLIC_BASE_URL || 'https://pro-sprint-ai.vercel.app'}/api/integrations/email/callback/microsoft`;
         const scope = 'https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/Mail.Read offline_access';
         
         const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_mode=query`;
