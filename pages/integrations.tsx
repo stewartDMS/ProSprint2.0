@@ -242,6 +242,7 @@ export default function Integrations() {
     const params = new URLSearchParams(window.location.search);
     const connected = params.get('connected');
     const error = params.get('error');
+    const errorMessage = params.get('message');
     
     if (connected) {
       setMessage({
@@ -251,9 +252,12 @@ export default function Integrations() {
       // Clean up URL
       window.history.replaceState({}, '', '/integrations');
     } else if (error) {
+      const detailedMessage = errorMessage 
+        ? `Failed to connect ${error.toUpperCase()}: ${decodeURIComponent(errorMessage)}`
+        : `Failed to connect ${error.toUpperCase()}. Please try again.`;
       setMessage({
         type: 'error',
-        text: `Failed to connect ${error.toUpperCase()}. Please try again.`,
+        text: detailedMessage,
       });
       window.history.replaceState({}, '', '/integrations');
     }
