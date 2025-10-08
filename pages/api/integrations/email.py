@@ -14,7 +14,9 @@ class handler(BaseHTTPRequestHandler):
     """
     Email Integration API endpoint.
     Handles email operations like sending messages, managing campaigns, and notifications.
-    Supports SMTP, Gmail OAuth2, and Microsoft OAuth2 with demo fallback.
+    Supports SMTP, Gmail OAuth2, and Microsoft OAuth2.
+    
+    Note: Gmail OAuth2 integration requires real credentials - no demo mode available.
     """
     
     def _is_configured(self):
