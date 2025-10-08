@@ -392,11 +392,12 @@ with smtplib.SMTP(smtp_host, smtp_port) as server:
 
 ##### Option B: Gmail API with OAuth2 (Recommended)
 
-**Demo Mode** (default):
-- Simulates Gmail API calls without actual delivery
-- No OAuth2 credentials required for testing
+**⚠️ PRODUCTION ONLY - No Demo Mode Available**:
+- Requires real Google OAuth2 credentials to function
+- Demo mode has been removed to ensure production-ready integration
+- Integration will return errors if credentials are not configured
 
-**Production Mode** (with OAuth2):
+**Production Mode** (OAuth2 Required):
 - Sends real emails using Gmail API
 - More secure than SMTP (no app passwords needed)
 - Uses OAuth2 for authentication
@@ -415,11 +416,15 @@ with smtplib.SMTP(smtp_host, smtp_port) as server:
    - Add authorized redirect URI: `https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback`
    - For local development: also add `http://localhost:3000/api/integrations/gmail/callback`
 5. Copy Client ID and Client Secret
-6. Add to `.env.local`:
+6. Add to `.env.local` (use `GOOGLE_*` variables for consistency):
    ```bash
-   GMAIL_CLIENT_ID=your-client-id.apps.googleusercontent.com
-   GMAIL_CLIENT_SECRET=your-client-secret
-   GMAIL_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback
+   # Use these GOOGLE_* variables for ALL Google integrations (Drive, Docs, Gmail)
+   GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=your-client-secret
+   GOOGLE_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback
+   
+   # Note: GMAIL_* variables are deprecated but still supported for backwards compatibility
+   # Prefer GOOGLE_* variables above
    ```
 7. Restart the application
 8. Go to Integrations page and click "Connect" for Gmail
@@ -428,6 +433,12 @@ with smtplib.SMTP(smtp_host, smtp_port) as server:
 
 **OAuth2 Scopes Required**:
 - `https://www.googleapis.com/auth/gmail.send` - Send emails on behalf of user
+- `https://www.googleapis.com/auth/gmail.readonly` - Read emails (optional)
+
+**Important Notes**:
+- The Gmail integration will **NOT** work without valid credentials
+- Clear error messages will be displayed if credentials are missing or invalid
+- Use the same Google OAuth2 credentials for Drive, Docs, and Gmail integrations
 
 ##### Option C: Microsoft Outlook/Graph API with OAuth2
 
@@ -608,11 +619,14 @@ ProSprint 2.0 uses dedicated OAuth2 callback routes for each integration to hand
 **Required Environment Variables by Integration:**
 
 ```bash
-# Google Drive & Gmail
+# Google Drive & Gmail (use GOOGLE_* for ALL Google integrations)
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GMAIL_CLIENT_ID=your_google_client_id
-GMAIL_CLIENT_SECRET=your_google_client_secret
+GOOGLE_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback
+
+# Note: GMAIL_* variables are deprecated but still supported for backwards compatibility
+# GMAIL_CLIENT_ID=your_google_client_id  # DEPRECATED - use GOOGLE_CLIENT_ID
+# GMAIL_CLIENT_SECRET=your_google_client_secret  # DEPRECATED - use GOOGLE_CLIENT_SECRET
 
 # Microsoft Outlook
 MICROSOFT_CLIENT_ID=your_microsoft_client_id
@@ -679,6 +693,8 @@ NEXT_PUBLIC_BASE_URL=https://pro-sprint-ai.vercel.app  # Production Vercel domai
 
 #### Google Drive & Gmail Setup
 
+**⚠️ Important: Use consistent GOOGLE_* variable names for all Google integrations**
+
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select existing
 3. Enable APIs: Google Drive API, Gmail API, Google Docs API
@@ -690,9 +706,21 @@ NEXT_PUBLIC_BASE_URL=https://pro-sprint-ai.vercel.app  # Production Vercel domai
    - For local development: `http://localhost:3000/api/integrations/google/callback`
    - For local development: `http://localhost:3000/api/integrations/gmail/callback`
 7. Copy Client ID and Client Secret
-8. Add same credentials for both GOOGLE_CLIENT_ID and GMAIL_CLIENT_ID
+8. Add to `.env.local` using `GOOGLE_*` variable names:
+   ```bash
+   GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=your-client-secret
+   GOOGLE_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback
+   ```
+9. **Note**: The same credentials work for Drive, Docs, and Gmail
+10. **Gmail requires real credentials**: Demo mode is not available for Gmail integration
 
 **Automation Capabilities**: Upload/download files, create Google Docs, manage folders, send/read emails
+
+**Production Requirements for Gmail**:
+- Real OAuth2 credentials are required (no demo/fallback mode)
+- Integration will return clear error messages if credentials are missing
+- Token storage, refresh, and security improvements are noted in TODOs
 
 #### Xero Setup
 
