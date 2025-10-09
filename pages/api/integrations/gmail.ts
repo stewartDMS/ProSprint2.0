@@ -1,6 +1,27 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { tokenStorage } from '../utils/tokenStorage';
 
+/**
+ * Gmail Integration API Handler
+ * 
+ * PRODUCTION MODE ONLY - No demo or fallback logic.
+ * Requires real Google OAuth2 credentials to function.
+ * 
+ * Environment Variables Required:
+ * - GOOGLE_CLIENT_ID: OAuth2 client ID from Google Cloud Console
+ * - GOOGLE_CLIENT_SECRET: OAuth2 client secret from Google Cloud Console
+ * - GOOGLE_REDIRECT_URI: Authorized redirect URI (defaults to production URL)
+ * 
+ * TODO: Production improvements needed:
+ * - Implement user session authentication
+ * - Add real Gmail API integration for sending emails
+ * - Implement token refresh logic
+ * - Add rate limiting and quota management
+ * - Replace in-memory token storage with encrypted database
+ * - Add comprehensive error tracking and monitoring
+ * - Implement CSRF protection for OAuth flow
+ */
+
 interface GmailResponse {
   integration: string;
   status: string;
@@ -18,81 +39,61 @@ export default async function handler(
   res: NextApiResponse<GmailResponse>
 ) {
   const { method, query } = req;
+  
+  // TODO: PRODUCTION REQUIRED - Replace with actual user authentication
   const userId = 'default';
   
-  const isConfigured = Boolean(
-    process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET
-  );
+  // Check for required environment variables (using GOOGLE_* for consistency)
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+  
+  const isConfigured = Boolean(clientId && clientSecret);
   
   if (method === 'GET') {
     const action = query.action as string || 'status';
     
     if (action === 'connect') {
-      if (isConfigured) {
-        const clientId = process.env.GMAIL_CLIENT_ID;
-        const redirectUri = process.env.GMAIL_REDIRECT_URI || 'https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback';
-        const scope = 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly';
-        
-        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
-        
-        res.status(200).json({
+      // Require real credentials - no demo mode
+      if (!isConfigured) {
+        res.status(400).json({
           integration: 'Gmail',
-          status: 'redirect',
-          configured: isConfigured,
+          status: 'error',
+          configured: false,
           timestamp: new Date().toISOString(),
-          auth_url: authUrl,
-          message: 'Redirect user to auth_url to authorize Gmail access',
+          message: 'Gmail integration not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables. Demo mode is not available for Gmail integration.',
         });
-      } else {
-        res.status(200).json({
-          integration: 'Gmail',
-          status: 'connected',
-          configured: isConfigured,
-          timestamp: new Date().toISOString(),
-          message: 'Gmail connected in demo mode (configure GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET for real integration)',
-        });
+        return;
       }
+      
+      // Build OAuth2 authorization URL
+      const finalRedirectUri = redirectUri || 'https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback';
+      const scope = 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly';
+      
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(finalRedirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+      
+      res.status(200).json({
+        integration: 'Gmail',
+        status: 'redirect',
+        configured: true,
+        timestamp: new Date().toISOString(),
+        auth_url: authUrl,
+        message: 'Redirect user to auth_url to authorize Gmail access',
+      });
     } else if (action === 'callback') {
-      const code = query.code as string;
+      // NOTE: This callback action is deprecated. Use /api/integrations/gmail/callback.ts instead.
+      // This is kept for backwards compatibility but should not be used.
+      console.warn('[Gmail Integration] Deprecated callback action called. Use /api/integrations/gmail/callback.ts instead.');
       
-      if (code && isConfigured) {
-        try {
-          const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-              grant_type: 'authorization_code',
-              client_id: process.env.GMAIL_CLIENT_ID!,
-              client_secret: process.env.GMAIL_CLIENT_SECRET!,
-              redirect_uri: process.env.GMAIL_REDIRECT_URI || 'https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback',
-              code,
-            }),
-          });
-          
-          if (tokenResponse.ok) {
-            const tokenData = await tokenResponse.json();
-            
-            tokenStorage.store('gmail', userId, {
-              access_token: tokenData.access_token,
-              refresh_token: tokenData.refresh_token,
-              expires_at: Math.floor(Date.now() / 1000) + tokenData.expires_in,
-              scope: tokenData.scope,
-            });
-            
-            res.writeHead(302, { Location: '/integrations?connected=gmail' });
-            res.end();
-            return;
-          }
-        } catch (error) {
-          console.error('Gmail OAuth error:', error);
-        }
-      }
-      
-      res.writeHead(302, { Location: '/integrations?error=gmail' });
-      res.end();
+      res.status(400).json({
+        integration: 'Gmail',
+        status: 'error',
+        configured: isConfigured,
+        timestamp: new Date().toISOString(),
+        message: 'This callback endpoint is deprecated. OAuth callback should go to /api/integrations/gmail/callback',
+      });
     } else if (action === 'disconnect') {
+      // Remove stored tokens
       tokenStorage.remove('gmail', userId);
       res.status(200).json({
         integration: 'Gmail',
@@ -102,12 +103,26 @@ export default async function handler(
         message: 'Gmail disconnected successfully',
       });
     } else {
+      // Default status action
       const isConnected = tokenStorage.isValid('gmail', userId);
+      
+      // Return error if not configured
+      if (!isConfigured) {
+        res.status(400).json({
+          integration: 'Gmail',
+          status: 'error',
+          configured: false,
+          connected: false,
+          timestamp: new Date().toISOString(),
+          message: 'Gmail integration not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.',
+        });
+        return;
+      }
       
       res.status(200).json({
         integration: 'Gmail',
         status: isConnected ? 'connected' : 'disconnected',
-        configured: isConfigured,
+        configured: true,
         connected: isConnected,
         timestamp: new Date().toISOString(),
         capabilities: isConnected ? [
@@ -117,71 +132,101 @@ export default async function handler(
           'Search inbox',
           'Automated responses',
         ] : undefined,
-        mode: isConfigured && isConnected ? 'production' : 'demo',
+        message: isConnected 
+          ? 'Gmail connected and ready to use' 
+          : 'Gmail configured but not connected. Use the connect action to authorize.',
       });
     }
   } else if (method === 'POST') {
     const data = req.body;
     const action = data.action || 'send';
+    
+    // Verify configuration
+    if (!isConfigured) {
+      res.status(400).json({
+        integration: 'Gmail',
+        status: 'error',
+        configured: false,
+        message: 'Gmail integration not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.',
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    
     const isConnected = tokenStorage.isValid('gmail', userId);
     
+    // Verify connection
+    if (!isConnected) {
+      res.status(401).json({
+        integration: 'Gmail',
+        status: 'error',
+        configured: true,
+        message: 'Gmail not connected. Please authorize the integration first by calling the connect action.',
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+    
     try {
-      if (isConfigured && isConnected) {
-        // const token = tokenStorage.get('gmail', userId);
-        
-        // Make real API call to Gmail
-        // Example: Send email via Gmail API
-        // const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Authorization': `Bearer ${token?.access_token}`,
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify({
-        //     raw: createEmailMessage(data.recipient, data.subject, data.body)
-        //   }),
-        // });
-        
-        res.status(200).json({
+      // TODO: PRODUCTION REQUIRED - Implement real Gmail API integration
+      // Get the stored token
+      const token = tokenStorage.get('gmail', userId);
+      
+      if (!token) {
+        res.status(401).json({
           integration: 'Gmail',
-          status: 'completed',
-          configured: isConfigured,
-          message: `Gmail ${action} operation successful (production mode)`,
+          status: 'error',
+          configured: true,
+          message: 'Gmail token not found. Please re-authorize the integration.',
           timestamp: new Date().toISOString(),
-          action,
-          entity_id: `gmail_${Date.now()}`,
-          details: {
-            platform: 'Gmail',
-            operation: action,
-            mode: 'production',
-            recipient: data.recipient,
-            subject: data.subject,
-          },
         });
-      } else {
-        res.status(200).json({
-          integration: 'Gmail',
-          status: 'completed',
-          configured: isConfigured,
-          message: `Gmail ${action} operation successful (demo mode)`,
-          timestamp: new Date().toISOString(),
-          action,
-          entity_id: `gmail_demo_${Date.now()}`,
-          details: {
-            platform: 'Demo Gmail',
-            operation: action,
-            mode: 'demo',
-            note: 'Configure GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET for real integration',
-            recipient: data.recipient,
-            subject: data.subject,
-          },
-        });
+        return;
       }
+      
+      // TODO: Implement token refresh if expired
+      // TODO: Make real API call to Gmail
+      // Example implementation:
+      // const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Authorization': `Bearer ${token.access_token}`,
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({
+      //     raw: createEmailMessage(data.recipient, data.subject, data.body)
+      //   }),
+      // });
+      // 
+      // if (!response.ok) {
+      //   const errorData = await response.json();
+      //   throw new Error(`Gmail API error: ${errorData.error?.message || response.statusText}`);
+      // }
+      // 
+      // const result = await response.json();
+      
+      // For now, return success with a note that real API integration is needed
+      res.status(200).json({
+        integration: 'Gmail',
+        status: 'pending',
+        configured: true,
+        message: `Gmail ${action} operation ready but real API integration not yet implemented. Token is valid and stored.`,
+        timestamp: new Date().toISOString(),
+        action,
+        entity_id: `gmail_${Date.now()}`,
+        details: {
+          platform: 'Gmail',
+          operation: action,
+          recipient: data.recipient,
+          subject: data.subject,
+          note: 'TODO: Implement real Gmail API call using the stored OAuth token',
+        },
+      });
     } catch (error) {
+      console.error('[Gmail Integration] Operation failed:', error);
       res.status(500).json({
         integration: 'Gmail',
         status: 'error',
-        configured: isConfigured,
+        configured: true,
         message: `Gmail operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         timestamp: new Date().toISOString(),
       });

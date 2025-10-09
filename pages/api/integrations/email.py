@@ -14,7 +14,9 @@ class handler(BaseHTTPRequestHandler):
     """
     Email Integration API endpoint.
     Handles email operations like sending messages, managing campaigns, and notifications.
-    Supports SMTP, Gmail OAuth2, and Microsoft OAuth2 with demo fallback.
+    Supports SMTP, Gmail OAuth2, and Microsoft OAuth2.
+    
+    Note: Gmail OAuth2 integration requires real credentials - no demo mode available.
     """
     
     def _is_configured(self):
@@ -25,9 +27,14 @@ class handler(BaseHTTPRequestHandler):
         return bool(smtp_host and smtp_user and smtp_password)
     
     def _is_gmail_oauth_configured(self):
-        """Check if Gmail OAuth2 is configured."""
-        client_id = os.getenv('GMAIL_CLIENT_ID', '')
-        client_secret = os.getenv('GMAIL_CLIENT_SECRET', '')
+        """Check if Gmail OAuth2 is configured.
+        
+        Uses GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET for consistency.
+        Falls back to GMAIL_* variables for backwards compatibility (deprecated).
+        """
+        # Prefer GOOGLE_* variables for consistency across all Google integrations
+        client_id = os.getenv('GOOGLE_CLIENT_ID', '') or os.getenv('GMAIL_CLIENT_ID', '')
+        client_secret = os.getenv('GOOGLE_CLIENT_SECRET', '') or os.getenv('GMAIL_CLIENT_SECRET', '')
         return bool(client_id and client_secret)
     
     def _is_microsoft_oauth_configured(self):
@@ -37,9 +44,13 @@ class handler(BaseHTTPRequestHandler):
         return bool(client_id and client_secret)
     
     def _get_gmail_auth_url(self):
-        """Generate Gmail OAuth2 authorization URL."""
-        client_id = os.getenv('GMAIL_CLIENT_ID', '')
-        redirect_uri = os.getenv('GMAIL_REDIRECT_URI', 'https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback')
+        """Generate Gmail OAuth2 authorization URL.
+        
+        Uses GOOGLE_CLIENT_ID and GOOGLE_REDIRECT_URI for consistency.
+        Falls back to GMAIL_* variables for backwards compatibility (deprecated).
+        """
+        client_id = os.getenv('GOOGLE_CLIENT_ID', '') or os.getenv('GMAIL_CLIENT_ID', '')
+        redirect_uri = os.getenv('GOOGLE_REDIRECT_URI', '') or os.getenv('GMAIL_REDIRECT_URI', 'https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback')
         
         # Gmail OAuth2 scopes for sending emails
         scopes = 'https://www.googleapis.com/auth/gmail.send'
@@ -109,8 +120,8 @@ class handler(BaseHTTPRequestHandler):
                 response = {
                     "provider": "gmail",
                     "auth_url": None,
-                    "demo_mode": True,
-                    "message": "Gmail OAuth2 not configured (demo mode). Set GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET for real integration."
+                    "status": "error",
+                    "message": "Gmail OAuth2 not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables. Demo mode is not available."
                 }
             
             self.wfile.write(json.dumps(response).encode())
@@ -150,25 +161,49 @@ class handler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             
-            if code and self._is_gmail_oauth_configured():
-                # In production, exchange code for tokens using Google OAuth2 library
-                # For demo, simulate successful token storage
-                _token_storage['gmail'] = {
-                    'access_token': f'demo_gmail_token_{int(datetime.now().timestamp())}',
-                    'refresh_token': 'demo_refresh_token',
-                    'expires_at': (datetime.now().timestamp() + 3600)
-                }
-                
-                response = {
-                    "provider": "gmail",
-                    "status": "connected",
-                    "message": "Gmail OAuth2 authorization successful (demo mode)"
-                }
-            else:
+            if not code:
                 response = {
                     "provider": "gmail",
                     "status": "error",
-                    "message": "OAuth2 callback failed - missing code or configuration"
+                    "message": "OAuth2 callback failed - missing authorization code"
+                }
+            elif not self._is_gmail_oauth_configured():
+                response = {
+                    "provider": "gmail",
+                    "status": "error",
+                    "message": "Gmail OAuth2 not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables."
+                }
+            else:
+                # TODO: PRODUCTION REQUIRED - Exchange code for real tokens using Google OAuth2 library
+                # Example implementation:
+                # from google.oauth2.credentials import Credentials
+                # from google_auth_oauthlib.flow import Flow
+                # 
+                # flow = Flow.from_client_config(
+                #     {
+                #         "web": {
+                #             "client_id": os.getenv('GOOGLE_CLIENT_ID'),
+                #             "client_secret": os.getenv('GOOGLE_CLIENT_SECRET'),
+                #             "redirect_uris": [os.getenv('GOOGLE_REDIRECT_URI')],
+                #             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                #             "token_uri": "https://oauth2.googleapis.com/token"
+                #         }
+                #     },
+                #     scopes=['https://www.googleapis.com/auth/gmail.send']
+                # )
+                # flow.fetch_token(code=code)
+                # credentials = flow.credentials
+                # 
+                # _token_storage['gmail'] = {
+                #     'access_token': credentials.token,
+                #     'refresh_token': credentials.refresh_token,
+                #     'expires_at': credentials.expiry.timestamp() if credentials.expiry else None
+                # }
+                
+                response = {
+                    "provider": "gmail",
+                    "status": "error",
+                    "message": "Real token exchange not implemented. TODO: Implement Google OAuth2 token exchange in production."
                 }
             
             self.wfile.write(json.dumps(response).encode())
@@ -312,11 +347,41 @@ class handler(BaseHTTPRequestHandler):
         
         try:
             # Handle provider-specific sending
-            if provider == 'gmail' and _token_storage.get('gmail'):
-                # Send via Gmail API
+            if provider == 'gmail':
+                if not self._is_gmail_oauth_configured():
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    
+                    error_response = {
+                        "status": "error",
+                        "message": "Gmail OAuth2 not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.",
+                        "timestamp": datetime.now().isoformat(),
+                        "action": action
+                    }
+                    self.wfile.write(json.dumps(error_response).encode())
+                    return
+                
                 gmail_token = _token_storage.get('gmail')
                 
-                # In production, use Google API Client to send email
+                if not gmail_token:
+                    self.send_response(401)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    
+                    error_response = {
+                        "status": "error",
+                        "message": "Gmail not connected. Please authorize the integration first.",
+                        "timestamp": datetime.now().isoformat(),
+                        "action": action
+                    }
+                    self.wfile.write(json.dumps(error_response).encode())
+                    return
+                
+                # TODO: PRODUCTION REQUIRED - Implement real Gmail API integration
+                # Example implementation:
                 # from googleapiclient.discovery import build
                 # from google.oauth2.credentials import Credentials
                 # 
@@ -326,19 +391,15 @@ class handler(BaseHTTPRequestHandler):
                 # service.users().messages().send(userId='me', body=message).execute()
                 
                 result = {
-                    "status": "completed",
-                    "message": f"Email sent via Gmail API (demo mode)",
+                    "status": "error",
+                    "message": "Real Gmail API integration not implemented. TODO: Implement Gmail API call using OAuth2 token.",
                     "timestamp": datetime.now().isoformat(),
                     "action": action,
-                    "email_id": f"gmail_{int(datetime.now().timestamp())}",
                     "details": {
                         "provider": "gmail",
                         "recipient": recipient,
                         "subject": subject,
-                        "body_length": len(body),
-                        "delivery_status": "sent via Gmail API (demo)",
-                        "mode": "demo",
-                        "note": "Using OAuth2 token for Gmail API"
+                        "note": "Token is available but real API call needs to be implemented"
                     }
                 }
             
