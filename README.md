@@ -304,7 +304,7 @@ SMTP_PASSWORD=your-app-password
 # Gmail API OAuth2 Integration (optional - recommended)
 GMAIL_CLIENT_ID=your-gmail-client-id.apps.googleusercontent.com
 GMAIL_CLIENT_SECRET=your-gmail-client-secret
-GMAIL_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback
+GMAIL_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail
 
 # Microsoft Graph API OAuth2 Integration (optional)
 MICROSOFT_CLIENT_ID=your-microsoft-client-id
@@ -413,15 +413,15 @@ with smtplib.SMTP(smtp_host, smtp_port) as server:
    - Go to "APIs & Services" > "Credentials"
    - Click "Create Credentials" > "OAuth client ID"
    - Choose "Web application"
-   - Add authorized redirect URI: `https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback`
-   - For local development: also add `http://localhost:3000/api/integrations/gmail/callback`
+   - Add authorized redirect URI: `https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail`
+   - For local development: also add `http://localhost:3000/api/integrations/email/callback/gmail`
 5. Copy Client ID and Client Secret
 6. Add to `.env.local` (use `GOOGLE_*` variables for consistency):
    ```bash
    # Use these GOOGLE_* variables for ALL Google integrations (Drive, Docs, Gmail)
    GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
    GOOGLE_CLIENT_SECRET=your-client-secret
-   GOOGLE_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback
+   GOOGLE_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail
    
    # Note: GMAIL_* variables are deprecated but still supported for backwards compatibility
    # Prefer GOOGLE_* variables above
@@ -606,7 +606,7 @@ ProSprint 2.0 uses dedicated OAuth2 callback routes for each integration to hand
 | Integration | Callback Route |
 |------------|----------------|
 | Google Drive | `/api/integrations/google/callback` |
-| Gmail | `/api/integrations/gmail/callback` |
+| Gmail | `/api/integrations/email/callback/gmail` |
 | Microsoft Outlook | `/api/integrations/email/callback/microsoft` |
 | HubSpot | `/api/integrations/hubspot/callback` |
 | Salesforce | `/api/integrations/salesforce/callback` |
@@ -622,7 +622,7 @@ ProSprint 2.0 uses dedicated OAuth2 callback routes for each integration to hand
 # Google Drive & Gmail (use GOOGLE_* for ALL Google integrations)
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback
+GOOGLE_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail
 
 # Note: GMAIL_* variables are deprecated but still supported for backwards compatibility
 # GMAIL_CLIENT_ID=your_google_client_id  # DEPRECATED - use GOOGLE_CLIENT_ID
@@ -702,15 +702,15 @@ NEXT_PUBLIC_BASE_URL=https://pro-sprint-ai.vercel.app  # Production Vercel domai
 5. Set Application type: Web application
 6. Add Authorized redirect URIs:
    - For production: `https://pro-sprint-ai.vercel.app/api/integrations/google/callback`
-   - For production: `https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback`
+   - For production: `https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail`
    - For local development: `http://localhost:3000/api/integrations/google/callback`
-   - For local development: `http://localhost:3000/api/integrations/gmail/callback`
+   - For local development: `http://localhost:3000/api/integrations/email/callback/gmail`
 7. Copy Client ID and Client Secret
 8. Add to `.env.local` using `GOOGLE_*` variable names:
    ```bash
    GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
    GOOGLE_CLIENT_SECRET=your-client-secret
-   GOOGLE_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/gmail/callback
+   GOOGLE_REDIRECT_URI=https://pro-sprint-ai.vercel.app/api/integrations/email/callback/gmail
    ```
 9. **Note**: The same credentials work for Drive, Docs, and Gmail
 10. **Gmail requires real credentials**: Demo mode is not available for Gmail integration
