@@ -40,6 +40,13 @@ export default async function handler(
   // This hardcoded value is temporary and must be replaced before production deployment
   const userId = 'default';
   
+  // Handle only GET requests for OAuth callback
+  if (method !== 'GET') {
+    console.error('[Gmail OAuth Callback] Invalid method:', method);
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
   // Verify and log environment variables - using GOOGLE_* for consistency across Google integrations
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -64,13 +71,6 @@ export default async function handler(
     );
     res.writeHead(302, { Location: `/integrations?error=gmail&message=${errorMessage}` });
     res.end();
-    return;
-  }
-
-  // Handle only GET requests for OAuth callback
-  if (method !== 'GET') {
-    console.error('[Gmail OAuth Callback] Invalid method:', method);
-    res.status(405).json({ error: 'Method not allowed' });
     return;
   }
   
