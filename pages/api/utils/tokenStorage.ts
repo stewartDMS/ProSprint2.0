@@ -17,7 +17,6 @@
  */
 
 import {
-  tokenStorage as dbTokenStorage,
   store as dbStore,
   get as dbGet,
   isValid as dbIsValid,
@@ -55,12 +54,11 @@ export const tokenStorage = {
    * NOTE: This synchronous method cannot retrieve tokens from the database.
    * Use the async version from lib/tokenStorage.ts instead.
    * 
-   * @param integration - Integration name
-   * @param userId - User identifier
    * @returns null (cannot retrieve synchronously from database)
    * @deprecated Use async get() from lib/tokenStorage.ts
    */
-  get(integration: string, userId: string): OAuthToken | null {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  get(_integration: string, _userId: string): OAuthToken | null {
     console.warn(
       '[TokenStorage] Synchronous get() is deprecated. Use async get() from lib/tokenStorage.ts'
     );
@@ -73,12 +71,11 @@ export const tokenStorage = {
    * NOTE: This synchronous method cannot check the database.
    * Use the async version from lib/tokenStorage.ts instead.
    * 
-   * @param integration - Integration name
-   * @param userId - User identifier
    * @returns false (cannot check synchronously from database)
    * @deprecated Use async isValid() from lib/tokenStorage.ts
    */
-  isValid(integration: string, userId: string): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isValid(_integration: string, _userId: string): boolean {
     console.warn(
       '[TokenStorage] Synchronous isValid() is deprecated. Use async isValid() from lib/tokenStorage.ts'
     );
