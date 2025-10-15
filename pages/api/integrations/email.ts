@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { tokenStorage } from '../utils/tokenStorage';
+import { isValid as isTokenValid, remove as removeToken } from '../../../lib/tokenStorage';
 
 interface EmailResponse {
   integration: string;
@@ -123,7 +123,7 @@ export default async function handler(
       }
     } else if (action === 'disconnect_gmail') {
       // Handle Gmail disconnect
-      tokenStorage.remove('gmail', userId);
+      await removeToken('gmail', userId);
       res.status(200).json({
         integration: 'Email',
         status: 'disconnected',
@@ -133,7 +133,7 @@ export default async function handler(
       });
     } else if (action === 'disconnect_outlook') {
       // Handle Outlook disconnect
-      tokenStorage.remove('outlook', userId);
+      await removeToken('outlook', userId);
       res.status(200).json({
         integration: 'Email',
         status: 'disconnected',
@@ -143,8 +143,8 @@ export default async function handler(
       });
     } else {
       // Return status with OAuth2 information
-      const gmailConnected = tokenStorage.isValid('gmail', userId);
-      const outlookConnected = tokenStorage.isValid('outlook', userId);
+      const gmailConnected = await isTokenValid('gmail', userId);
+      const outlookConnected = await isTokenValid('outlook', userId);
       
       res.status(200).json({
         integration: 'Email',

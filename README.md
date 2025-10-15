@@ -187,6 +187,10 @@ ProSprint AI uses environment variables for configuration. Copy `.env.example` t
 # Required for AI processing
 OPENAI_API_KEY=your_openai_api_key
 
+# Required for persistent token storage
+DATABASE_URL=postgresql://user:password@hostname:5432/dbname?schema=public
+ENCRYPTION_KEY=your_64_character_hex_encryption_key_here
+
 # Optional integrations (configure as needed)
 SLACK_TOKEN=your_slack_token
 SLACK_CHANNEL=#general
@@ -200,9 +204,21 @@ CRM_API_KEY=your_crm_api_key
 CRM_API_URL=https://api.your-crm.com
 ```
 
+### Database Setup
+
+ProSprint AI 2.0 uses PostgreSQL for secure, persistent token storage with AES-256 encryption.
+
+**Quick setup:**
+1. Create a PostgreSQL database (Render, local, or other provider)
+2. Generate encryption key: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+3. Set `DATABASE_URL` and `ENCRYPTION_KEY` environment variables
+4. Run migrations: `npx prisma migrate dev`
+
+See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for detailed instructions.
+
 ### Demo Mode
 
-ProSprint AI can run in demo mode without API keys configured. Actions will be simulated rather than executed.
+ProSprint AI can run in demo mode without API keys configured. Actions will be simulated rather than executed. However, **database configuration is required** for OAuth2 integrations (Gmail, Outlook, etc.) to persist tokens between restarts.
 
 ## Architecture
 

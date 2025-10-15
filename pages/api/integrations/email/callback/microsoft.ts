@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { tokenStorage } from '../../../utils/tokenStorage';
+import { store as storeToken } from '../../../../../lib/tokenStorage';
 
 /**
  * Microsoft OAuth2 Callback Handler
@@ -140,24 +140,18 @@ export default async function handler(
             timestamp: new Date().toISOString(),
           });
           
-          // TODO: PRODUCTION SECURITY - Token storage improvements required:
-          // 1. Encrypt tokens at rest using AES-256 or similar
-          // 2. Store in secure database (PostgreSQL, MongoDB) with encrypted fields
-          // 3. Associate tokens with authenticated user ID from session
-          // 4. Store additional metadata: issued_at, last_used, ip_address
-          // 5. Implement automatic token refresh 5 minutes before expiration
-          // 6. Add token rotation policy and revocation support
-          // 7. Log all token access for security audit trail
-          
-          // PLACEHOLDER: Using in-memory storage utility for development
-          // This implementation loses all tokens on server restart
-          // Replace with encrypted database storage before production deployment
-          tokenStorage.store('outlook', userId, {
+          // Store token in encrypted PostgreSQL database
+          // Uses AES-256 encryption for tokens at rest
+          // Implements automatic token refresh before expiration
+          await storeToken('outlook', userId, {
             access_token: tokenData.access_token,
             refresh_token: tokenData.refresh_token,
             expires_at: Math.floor(Date.now() / 1000) + tokenData.expires_in,
             scope: tokenData.scope,
             token_type: tokenData.token_type,
+          }, {
+            ipAddress: req.headers['x-forwarded-for'] as string || req.socket.remoteAddress,
+            userAgent: req.headers['user-agent'],
           });
           
           console.log('[Microsoft OAuth Callback] Token stored successfully, redirecting to success page');

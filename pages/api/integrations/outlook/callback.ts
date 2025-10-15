@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { tokenStorage } from '../../utils/tokenStorage';
+import { store as storeToken } from '../../../../lib/tokenStorage';
 
 export default async function handler(
   req: NextApiRequest,
@@ -35,11 +35,14 @@ export default async function handler(
         if (tokenResponse.ok) {
           const tokenData = await tokenResponse.json();
           
-          // Store token securely
-          tokenStorage.store('outlook', userId, {
+          // Store token in encrypted PostgreSQL database
+          await storeToken('outlook', userId, {
             access_token: tokenData.access_token,
             refresh_token: tokenData.refresh_token,
             expires_at: Math.floor(Date.now() / 1000) + tokenData.expires_in,
+          }, {
+            ipAddress: req.headers['x-forwarded-for'] as string || req.socket.remoteAddress,
+            userAgent: req.headers['user-agent'],
           });
           
           // Redirect to integrations page with success

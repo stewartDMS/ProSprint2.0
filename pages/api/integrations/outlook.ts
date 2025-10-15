@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { tokenStorage } from '../utils/tokenStorage';
+import { store as storeToken, isValid as isTokenValid, remove as removeToken } from '../../../lib/tokenStorage';
 
 interface OutlookResponse {
   integration: string;
@@ -78,7 +78,7 @@ export default async function handler(
           if (tokenResponse.ok) {
             const tokenData = await tokenResponse.json();
             
-            tokenStorage.store('outlook', userId, {
+            await storeToken('outlook', userId, {
               access_token: tokenData.access_token,
               refresh_token: tokenData.refresh_token,
               expires_at: Math.floor(Date.now() / 1000) + tokenData.expires_in,
@@ -97,7 +97,7 @@ export default async function handler(
       res.writeHead(302, { Location: '/integrations?error=outlook' });
       res.end();
     } else if (action === 'disconnect') {
-      tokenStorage.remove('outlook', userId);
+      await removeToken('outlook', userId);
       res.status(200).json({
         integration: 'Outlook',
         status: 'disconnected',
@@ -106,7 +106,7 @@ export default async function handler(
         message: 'Outlook disconnected successfully',
       });
     } else {
-      const isConnected = tokenStorage.isValid('outlook', userId);
+      const isConnected = await isTokenValid('outlook', userId);
       
       res.status(200).json({
         integration: 'Outlook',
@@ -127,7 +127,7 @@ export default async function handler(
   } else if (method === 'POST') {
     const data = req.body;
     const action = data.action || 'send';
-    const isConnected = tokenStorage.isValid('outlook', userId);
+    const isConnected = await isTokenValid('outlook', userId);
     
     try {
       if (isConfigured && isConnected) {
