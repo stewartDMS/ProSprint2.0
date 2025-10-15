@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { tokenStorage } from '../utils/tokenStorage';
+import { get as getToken, isValid as isTokenValid, remove as removeToken } from '../../../lib/tokenStorage';
 
 /**
  * Gmail Integration API Handler
@@ -94,7 +94,7 @@ export default async function handler(
       });
     } else if (action === 'disconnect') {
       // Remove stored tokens
-      tokenStorage.remove('gmail', userId);
+      await removeToken('gmail', userId);
       res.status(200).json({
         integration: 'Gmail',
         status: 'disconnected',
@@ -104,7 +104,7 @@ export default async function handler(
       });
     } else {
       // Default status action
-      const isConnected = tokenStorage.isValid('gmail', userId);
+      const isConnected = await isTokenValid('gmail', userId);
       
       // Return error if not configured
       if (!isConfigured) {
@@ -153,7 +153,7 @@ export default async function handler(
       return;
     }
     
-    const isConnected = tokenStorage.isValid('gmail', userId);
+    const isConnected = await isTokenValid('gmail', userId);
     
     // Verify connection
     if (!isConnected) {
@@ -168,9 +168,8 @@ export default async function handler(
     }
     
     try {
-      // TODO: PRODUCTION REQUIRED - Implement real Gmail API integration
-      // Get the stored token
-      const token = tokenStorage.get('gmail', userId);
+      // Get the stored token (automatically refreshes if expired)
+      const token = await getToken('gmail', userId);
       
       if (!token) {
         res.status(401).json({

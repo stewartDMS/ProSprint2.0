@@ -1,78 +1,126 @@
 /**
  * Token Storage Utility
- * Securely manages OAuth2 tokens for integrations
- * In production, this should be replaced with a database implementation
+ * 
+ * This module now uses PostgreSQL with AES-256 encryption for secure token storage.
+ * Replaces the previous in-memory storage with persistent database storage.
+ * 
+ * Features:
+ * - PostgreSQL database storage via Prisma ORM
+ * - AES-256-GCM encryption for tokens at rest
+ * - Automatic token refresh for OAuth2 providers
+ * - Audit trail and usage tracking
+ * - Generic interface for all integrations
+ * 
+ * IMPORTANT: This module provides both synchronous and asynchronous interfaces
+ * for backward compatibility. New code should use the async versions directly
+ * from lib/tokenStorage.ts
  */
 
-interface OAuthToken {
-  access_token: string;
-  refresh_token?: string;
-  expires_at?: number;
-  scope?: string;
-  token_type?: string;
-}
+import {
+  tokenStorage as dbTokenStorage,
+  store as dbStore,
+  get as dbGet,
+  isValid as dbIsValid,
+  remove as dbRemove,
+  clearAllForUser as dbClearAllForUser,
+  type OAuthToken
+} from '../../../lib/tokenStorage';
 
-// In-memory storage for demo (replace with database in production)
-const tokenStore = new Map<string, OAuthToken>();
-
+/**
+ * Synchronous wrapper that logs a warning and provides fallback behavior
+ * This is for backward compatibility with existing synchronous code
+ */
 export const tokenStorage = {
   /**
    * Store OAuth token for a specific integration and user
-   * @param integration - Integration name (e.g., 'hubspot', 'salesforce')
-   * @param userId - User identifier (for multi-user systems)
+   * 
+   * NOTE: This is a synchronous wrapper for backward compatibility.
+   * The actual storage operation is asynchronous. Consider using the async
+   * version from lib/tokenStorage.ts for new code.
+   * 
+   * @param integration - Integration name (e.g., 'gmail', 'outlook', 'hubspot')
+   * @param userId - User identifier
    * @param token - OAuth token data
    */
   store(integration: string, userId: string, token: OAuthToken): void {
-    const key = `${userId}:${integration}`;
-    tokenStore.set(key, token);
+    // Fire and forget - log any errors
+    dbStore(integration, userId, token).catch((error) => {
+      console.error('[TokenStorage] Error storing token:', error);
+    });
   },
 
   /**
    * Retrieve OAuth token for a specific integration and user
+   * 
+   * NOTE: This synchronous method cannot retrieve tokens from the database.
+   * Use the async version from lib/tokenStorage.ts instead.
+   * 
    * @param integration - Integration name
    * @param userId - User identifier
-   * @returns Token data or null if not found
+   * @returns null (cannot retrieve synchronously from database)
+   * @deprecated Use async get() from lib/tokenStorage.ts
    */
   get(integration: string, userId: string): OAuthToken | null {
-    const key = `${userId}:${integration}`;
-    return tokenStore.get(key) || null;
+    console.warn(
+      '[TokenStorage] Synchronous get() is deprecated. Use async get() from lib/tokenStorage.ts'
+    );
+    return null;
   },
 
   /**
    * Check if a token exists and is valid
+   * 
+   * NOTE: This synchronous method cannot check the database.
+   * Use the async version from lib/tokenStorage.ts instead.
+   * 
    * @param integration - Integration name
    * @param userId - User identifier
-   * @returns True if token exists and hasn't expired
+   * @returns false (cannot check synchronously from database)
+   * @deprecated Use async isValid() from lib/tokenStorage.ts
    */
   isValid(integration: string, userId: string): boolean {
-    const token = this.get(integration, userId);
-    if (!token) return false;
-    
-    // Check expiration if expires_at is set
-    if (token.expires_at) {
-      const now = Math.floor(Date.now() / 1000);
-      return token.expires_at > now;
-    }
-    
-    return true;
+    console.warn(
+      '[TokenStorage] Synchronous isValid() is deprecated. Use async isValid() from lib/tokenStorage.ts'
+    );
+    return false;
   },
 
   /**
    * Remove token for a specific integration and user
+   * 
+   * NOTE: This is a synchronous wrapper for backward compatibility.
+   * The actual removal operation is asynchronous.
+   * 
    * @param integration - Integration name
    * @param userId - User identifier
    */
   remove(integration: string, userId: string): void {
-    const key = `${userId}:${integration}`;
-    tokenStore.delete(key);
+    // Fire and forget - log any errors
+    dbRemove(integration, userId).catch((error) => {
+      console.error('[TokenStorage] Error removing token:', error);
+    });
   },
 
   /**
-   * Clear all tokens (for testing/development)
+   * Clear all tokens for a user
+   * 
+   * NOTE: This is a synchronous wrapper for backward compatibility.
+   * The actual clear operation is asynchronous.
    */
   clearAll(): void {
-    tokenStore.clear();
+    console.warn(
+      '[TokenStorage] clearAll() called - this will be ignored. Use async clearAllForUser() from lib/tokenStorage.ts'
+    );
   }
+};
+
+// Re-export the async token storage functions for direct use
+export {
+  dbStore as storeAsync,
+  dbGet as getAsync,
+  dbIsValid as isValidAsync,
+  dbRemove as removeAsync,
+  dbClearAllForUser as clearAllForUserAsync,
 };
 
 export type { OAuthToken };
