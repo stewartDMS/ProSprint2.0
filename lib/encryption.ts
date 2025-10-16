@@ -25,14 +25,16 @@ const KEY_LENGTH = 32; // 256-bit key
 
 /**
  * Get the encryption key from environment variables
- * @throws Error if ENCRYPTION_KEY is not set or invalid
+ * Supports both TOKEN_ENCRYPTION_KEY and ENCRYPTION_KEY for backwards compatibility
+ * @throws Error if neither key is set or if the key is invalid
  */
 function getEncryptionKey(): Buffer {
-  const key = process.env.ENCRYPTION_KEY;
+  // Try TOKEN_ENCRYPTION_KEY first (as specified in requirements), then fall back to ENCRYPTION_KEY
+  const key = process.env.TOKEN_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY;
   
   if (!key) {
     throw new Error(
-      'ENCRYPTION_KEY environment variable is not set. ' +
+      'TOKEN_ENCRYPTION_KEY or ENCRYPTION_KEY environment variable is not set. ' +
       'Generate a secure key with: node -e "console.log(crypto.randomBytes(32).toString(\'hex\'))"'
     );
   }
@@ -42,7 +44,7 @@ function getEncryptionKey(): Buffer {
   
   if (keyBuffer.length !== KEY_LENGTH) {
     throw new Error(
-      `ENCRYPTION_KEY must be ${KEY_LENGTH} bytes (${KEY_LENGTH * 2} hex characters). ` +
+      `TOKEN_ENCRYPTION_KEY must be ${KEY_LENGTH} bytes (${KEY_LENGTH * 2} hex characters). ` +
       `Current length: ${keyBuffer.length} bytes. ` +
       'Generate a new key with: node -e "console.log(crypto.randomBytes(32).toString(\'hex\'))"'
     );
