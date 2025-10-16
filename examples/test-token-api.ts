@@ -19,6 +19,7 @@
 
 import crypto from 'crypto';
 import { encrypt, decrypt, validateEncryptionConfig } from '../lib/encryption';
+import { store } from '../lib/tokenStorage';
 
 /**
  * Test encryption and decryption functionality
@@ -159,9 +160,9 @@ export default async function handler(req, res) {
   
   const tokens = await tokenResponse.json();
   
-  // Store encrypted tokens using internal API or direct library call
-  // For server-side: use the library directly (recommended)
-  const { store } = await import('../lib/tokenStorage');
+  // Store encrypted tokens using the library directly (recommended for server-side)
+  // Note: In real code, use a static import at the top of the file:
+  // import { store } from '../lib/tokenStorage';
   await store('gmail', 'user123', {
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,

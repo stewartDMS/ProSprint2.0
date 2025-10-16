@@ -125,7 +125,7 @@ Here's how to use the token storage in your OAuth callback handlers:
 ```typescript
 // Example: pages/api/integrations/gmail/callback.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { store } from '../../lib/tokenStorage';
+import { store } from '../../../../lib/tokenStorage';
 
 export default async function handler(
   req: NextApiRequest,
