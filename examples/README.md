@@ -55,10 +55,15 @@ console.log('✅ Encryption key is valid');
 
 ### 2. Test API via curl
 
+Set your base URL (defaults to localhost for development):
+```bash
+BASE_URL="${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}"
+```
+
 #### Store a token (POST):
 
 ```bash
-curl -X POST http://localhost:3000/api/tokens \
+curl -X POST ${BASE_URL}/api/tokens \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -84,7 +89,7 @@ Expected response:
 #### Retrieve a token (GET):
 
 ```bash
-curl "http://localhost:3000/api/tokens?userId=user123&integration=gmail"
+curl "${BASE_URL}/api/tokens?userId=user123&integration=gmail"
 ```
 
 Expected response:
@@ -104,20 +109,23 @@ Expected response:
 
 ### 3. Test with Postman or Thunder Client
 
-1. **POST** to `http://localhost:3000/api/tokens`
+Use your deployment URL or `http://localhost:3000` for local development.
+
+1. **POST** to `${BASE_URL}/api/tokens`
    - Headers: `Content-Type: application/json`
    - Body: See example above
 
-2. **GET** from `http://localhost:3000/api/tokens`
+2. **GET** from `${BASE_URL}/api/tokens`
    - Query params: `userId=user123&integration=gmail`
 
 ## Integration Example
 
-Here's how to use the token storage API in your OAuth callback handlers:
+Here's how to use the token storage in your OAuth callback handlers:
 
 ```typescript
 // Example: pages/api/integrations/gmail/callback.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { store } from '../../lib/tokenStorage';
 
 export default async function handler(
   req: NextApiRequest,
@@ -140,21 +148,13 @@ export default async function handler(
   
   const tokens = await tokenResponse.json();
   
-  // Store encrypted tokens using the API
-  await fetch('http://localhost:3000/api/tokens', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      userId: 'user123', // Get from session
-      integration: 'gmail',
-      token: {
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
-        scope: tokens.scope,
-        token_type: tokens.token_type,
-      },
-    }),
+  // Store encrypted tokens directly using the library (recommended for server-side)
+  await store('gmail', 'user123', {
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
+    expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
+    scope: tokens.scope,
+    token_type: tokens.token_type,
   });
   
   res.redirect('/integrations?success=true');

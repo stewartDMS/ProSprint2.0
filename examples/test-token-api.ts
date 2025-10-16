@@ -10,10 +10,11 @@
  * 3. Start the dev server: npm run dev
  * 
  * Usage:
+ *   # From project root
  *   npx ts-node examples/test-token-api.ts
- * 
- * Or run directly with the encryption utilities:
- *   npx ts-node -e "import('./examples/test-token-api').then(m => m.testEncryption())"
+ *   
+ *   # Or from examples directory
+ *   cd examples && npx ts-node test-token-api.ts
  */
 
 import crypto from 'crypto';
@@ -158,8 +159,21 @@ export default async function handler(req, res) {
   
   const tokens = await tokenResponse.json();
   
-  // Store encrypted tokens in database
-  await fetch('http://localhost:3000/api/tokens', {
+  // Store encrypted tokens using internal API or direct library call
+  // For server-side: use the library directly (recommended)
+  const { store } = await import('../lib/tokenStorage');
+  await store('gmail', 'user123', {
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
+    expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
+    scope: tokens.scope,
+    token_type: tokens.token_type,
+  });
+  
+  // Or via HTTP (if calling from client-side or external service)
+  /*
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  await fetch(\`\${baseUrl}/api/tokens\`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -174,6 +188,7 @@ export default async function handler(req, res) {
       },
     }),
   });
+  */
   
   res.redirect('/integrations?success=true');
 }
