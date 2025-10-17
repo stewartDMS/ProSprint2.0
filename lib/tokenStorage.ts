@@ -53,12 +53,12 @@ export async function store(
     
     // Upsert token (update if exists, create if not)
     await prisma.oAuthToken.upsert({
-      where: {
-        userId_integration: {
-          userId,
-          integration,
-        },
-      },
+  where: {
+    userId_provider: {
+      userId,
+      provider
+    }
+  },
       update: {
         accessToken: encryptedAccessToken,
         refreshToken: encryptedRefreshToken,
