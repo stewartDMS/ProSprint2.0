@@ -8,16 +8,22 @@ generator client {
 }
 
 model OAuthToken {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   userId       String
   provider     String
-  accessToken  String   // Encrypted
-  refreshToken String   // Encrypted
-  expiresAt    Int      // Unix timestamp
-  scope        String?
+  accessToken  String    @db.Text // Encrypted
+  refreshToken String?   @db.Text // Encrypted
+  expiresAt    DateTime? // Expiration timestamp
+  scope        String?   @db.Text
   tokenType    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastUsed     DateTime  @default(now())
+  ipAddress    String?
+  userAgent    String?   @db.Text
 
   @@unique([userId, provider])
+  @@index([userId])
+  @@index([provider])
+  @@index([expiresAt])
 }
