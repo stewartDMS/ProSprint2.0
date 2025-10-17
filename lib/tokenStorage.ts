@@ -30,13 +30,13 @@ export interface OAuthToken {
 /**
  * Store OAuth token for a specific integration and user
  * 
- * @param integration - Integration name (e.g., 'gmail', 'outlook', 'hubspot')
+ * @param provider - Provider name (e.g., 'gmail', 'outlook', 'hubspot')
  * @param userId - User identifier
  * @param token - OAuth token data
  * @param metadata - Optional metadata (IP address, user agent)
  */
 export async function store(
-  integration: string,
+  provider: string,
   userId: string,
   token: OAuthToken,
   metadata?: { ipAddress?: string; userAgent?: string }
@@ -72,7 +72,7 @@ export async function store(
       },
       create: {
         userId,
-        integration,
+        provider,
         accessToken: encryptedAccessToken,
         refreshToken: encryptedRefreshToken,
         expiresAt,
@@ -83,7 +83,7 @@ export async function store(
       },
     });
     
-    console.log(`[TokenStorage] Token stored successfully for ${integration}:${userId}`);
+    console.log(`[TokenStorage] Token stored successfully for ${provider}:${userId}`);
   } catch (error) {
     console.error('[TokenStorage] Failed to store token:', error);
     throw new Error(
@@ -96,22 +96,22 @@ export async function store(
  * Retrieve OAuth token for a specific integration and user
  * Automatically refreshes token if expired and refresh token is available
  * 
- * @param integration - Integration name
+ * @param provider - Provider name
  * @param userId - User identifier
  * @param autoRefresh - Whether to automatically refresh expired tokens (default: true)
  * @returns Token data or null if not found
  */
 export async function get(
-  integration: string,
+  provider: string,
   userId: string,
   autoRefresh: boolean = true
 ): Promise<OAuthToken | null> {
   try {
     const record = await prisma.oAuthToken.findUnique({
       where: {
-        userId_integration: {
+        userId_provider: {
           userId,
-          integration,
+          provider,
         },
       },
     });
@@ -129,13 +129,13 @@ export async function get(
     
     // Check if token needs refresh
     if (autoRefresh && decryptedRefreshToken && shouldRefreshToken(expiresAt)) {
-      console.log(`[TokenStorage] Token expiring soon, attempting refresh for ${integration}:${userId}`);
+      console.log(`[TokenStorage] Token expiring soon, attempting refresh for ${provider}:${userId}`);
       
       try {
-        const refreshedToken = await refreshToken(integration, decryptedRefreshToken);
+        const refreshedToken = await refreshToken(provider, decryptedRefreshToken);
         
         // Store the refreshed token
-        await store(integration, userId, {
+        await store(provider, userId, {
           access_token: refreshedToken.access_token,
           refresh_token: refreshedToken.refresh_token || decryptedRefreshToken,
           expires_at: Math.floor(Date.now() / 1000) + refreshedToken.expires_in,
@@ -143,7 +143,7 @@ export async function get(
           token_type: refreshedToken.token_type || record.tokenType || undefined,
         });
         
-        console.log(`[TokenStorage] Token refreshed successfully for ${integration}:${userId}`);
+        console.log(`[TokenStorage] Token refreshed successfully for ${provider}:${userId}`);
         
         return {
           access_token: refreshedToken.access_token,
@@ -153,7 +153,7 @@ export async function get(
           token_type: refreshedToken.token_type || record.tokenType || undefined,
         };
       } catch (refreshError) {
-        console.error(`[TokenStorage] Token refresh failed for ${integration}:${userId}:`, refreshError);
+        console.error(`[TokenStorage] Token refresh failed for ${provider}:${userId}:`, refreshError);
         // Fall through to return the existing (possibly expired) token
       }
     }
@@ -161,9 +161,9 @@ export async function get(
     // Update last used timestamp
     await prisma.oAuthToken.update({
       where: {
-        userId_integration: {
+        userId_provider: {
           userId,
-          integration,
+          provider,
         },
       },
       data: {
@@ -189,17 +189,17 @@ export async function get(
 /**
  * Check if a token exists and is valid (not expired)
  * 
- * @param integration - Integration name
+ * @param provider - Provider name
  * @param userId - User identifier
  * @returns True if token exists and hasn't expired
  */
-export async function isValid(integration: string, userId: string): Promise<boolean> {
+export async function isValid(provider: string, userId: string): Promise<boolean> {
   try {
     const record = await prisma.oAuthToken.findUnique({
       where: {
-        userId_integration: {
+        userId_provider: {
           userId,
-          integration,
+          provider,
         },
       },
       select: {
@@ -228,25 +228,25 @@ export async function isValid(integration: string, userId: string): Promise<bool
 /**
  * Remove token for a specific integration and user
  * 
- * @param integration - Integration name
+ * @param provider - Provider name
  * @param userId - User identifier
  */
-export async function remove(integration: string, userId: string): Promise<void> {
+export async function remove(provider: string, userId: string): Promise<void> {
   try {
     await prisma.oAuthToken.delete({
       where: {
-        userId_integration: {
+        userId_provider: {
           userId,
-          integration,
+          provider,
         },
       },
     });
     
-    console.log(`[TokenStorage] Token removed for ${integration}:${userId}`);
+    console.log(`[TokenStorage] Token removed for ${provider}:${userId}`);
   } catch (error) {
     // Ignore if token doesn't exist
     if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
-      console.log(`[TokenStorage] Token not found for removal: ${integration}:${userId}`);
+      console.log(`[TokenStorage] Token not found for removal: ${provider}:${userId}`);
       return;
     }
     
