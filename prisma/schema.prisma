@@ -1,45 +1,23 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// OAuth Token Storage Model
-// Stores encrypted OAuth2 tokens for all integrations
+generator client {
+  provider = "prisma-client-js"
+}
+
 model OAuthToken {
-  id              String   @id @default(cuid())
-  userId          String   // User identifier - in production, this should be a foreign key to users table
-  integration     String   // Integration name (e.g., 'gmail', 'outlook', 'hubspot')
-  
-  // Encrypted token fields (stored as encrypted strings)
-  accessToken     String   @db.Text // AES-256 encrypted access token
-  refreshToken    String?  @db.Text // AES-256 encrypted refresh token (optional)
-  
-  // Token metadata
-  expiresAt       DateTime? // When the access token expires
-  scope           String?   @db.Text // OAuth scopes granted
-  tokenType       String?  // Token type (e.g., 'Bearer')
-  
-  // Audit trail
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  lastUsed        DateTime @default(now())
-  issuedAt        DateTime @default(now())
-  
-  // Optional security metadata
-  ipAddress       String?
-  userAgent       String?  @db.Text
-  
-  // Composite unique constraint: one token per user per integration
-  @@unique([userId, integration])
-  @@index([userId])
-  @@index([integration])
-  @@index([expiresAt])
-  @@map("oauth_tokens")
+  id           String   @id @default(uuid())
+  userId       String
+  provider     String
+  accessToken  String   // Encrypted
+  refreshToken String   // Encrypted
+  expiresAt    Int      // Unix timestamp
+  scope        String?
+  tokenType    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, provider])
 }
