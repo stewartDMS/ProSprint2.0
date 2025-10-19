@@ -11,7 +11,15 @@
  * - Base64 encoding for database storage
  * 
  * Environment Variables Required:
- * - ENCRYPTION_KEY: 32-byte (256-bit) secret key in hex format
+ * - TOKEN_ENCRYPTION_KEY (recommended) or ENCRYPTION_KEY (legacy): 
+ *   32-byte (256-bit) secret key in HEXADECIMAL format (64 characters)
+ *   IMPORTANT: Must be HEX, NOT base64!
+ *   Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+ * 
+ * Key Format Requirements:
+ * - MUST be exactly 64 hexadecimal characters (0-9, a-f, A-F)
+ * - MUST NOT be base64 encoded
+ * - Example valid key: "a1b2c3d4e5f6...64 hex chars total..."
  * 
  * @module encryption
  */
@@ -25,9 +33,66 @@ const KEY_LENGTH = 32; // 256-bit key
 
 // Debug logging: Log encryption key availability at application startup
 // This helps diagnose issues with environment variable configuration in production
-console.log('[Encryption] Environment variables status at startup:');
+console.log('[Encryption] ========================================');
+console.log('[Encryption] Encryption Module Startup Validation');
+console.log('[Encryption] ========================================');
 console.log(`[Encryption] TOKEN_ENCRYPTION_KEY available: ${!!process.env.TOKEN_ENCRYPTION_KEY}`);
 console.log(`[Encryption] ENCRYPTION_KEY available: ${!!process.env.ENCRYPTION_KEY}`);
+
+// Validate encryption configuration at startup
+if (process.env.TOKEN_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY) {
+  const key = process.env.TOKEN_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY;
+  console.log(`[Encryption] Key length: ${key?.length} characters`);
+  console.log(`[Encryption] Expected: ${KEY_LENGTH * 2} characters (64 hex chars for ${KEY_LENGTH} bytes)`);
+  
+  // Perform validation checks without throwing to provide complete diagnostic info
+  if (key && key.length !== KEY_LENGTH * 2) {
+    console.error(`[Encryption] WARNING: Key length is incorrect (expected ${KEY_LENGTH * 2}, got ${key.length})`);
+  }
+  
+  if (key && !/^[0-9a-fA-F]+$/.test(key)) {
+    console.error('[Encryption] WARNING: Key contains non-hexadecimal characters');
+    // Check if it looks like base64
+    if (/^[A-Za-z0-9+/]+={0,2}$/.test(key) && key.length % 4 === 0) {
+      console.error('[Encryption] WARNING: Key appears to be base64 encoded - must be hex!');
+    }
+  }
+  
+  // Try to validate the key (this will throw if invalid, but we catch it for logging)
+  try {
+    getEncryptionKey();
+    console.log('[Encryption] ✓ Encryption key validation PASSED');
+  } catch (error) {
+    console.error('[Encryption] ✗ Encryption key validation FAILED');
+    console.error(`[Encryption] Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('[Encryption] Application will fail when attempting to encrypt/decrypt tokens');
+  }
+} else {
+  console.error('[Encryption] WARNING: No encryption key configured');
+  console.error('[Encryption] Application will fail when attempting to encrypt/decrypt tokens');
+}
+console.log('[Encryption] ========================================');
+
+/**
+ * Check if a string appears to be base64 encoded
+ * Base64 strings contain only A-Z, a-z, 0-9, +, /, and optional = padding
+ * @param str - String to check
+ * @returns true if string appears to be base64
+ */
+function isBase64(str: string): boolean {
+  // Base64 regex pattern - must match entire string
+  const base64Pattern = /^[A-Za-z0-9+/]+={0,2}$/;
+  return base64Pattern.test(str) && str.length % 4 === 0;
+}
+
+/**
+ * Check if a string is a valid hexadecimal string
+ * @param str - String to check
+ * @returns true if string contains only hex characters (0-9, a-f, A-F)
+ */
+function isHexString(str: string): boolean {
+  return /^[0-9a-fA-F]+$/.test(str);
+}
 
 /**
  * Get the encryption key from environment variables
@@ -45,13 +110,47 @@ function getEncryptionKey(): Buffer {
     );
   }
   
+  // Validate key length first
+  if (key.length !== KEY_LENGTH * 2) {
+    console.error(`[Encryption] ERROR: TOKEN_ENCRYPTION_KEY must be exactly ${KEY_LENGTH * 2} characters (64 hex characters for ${KEY_LENGTH} bytes)`);
+    console.error(`[Encryption] ERROR: Current key length: ${key.length} characters`);
+    throw new Error(
+      `TOKEN_ENCRYPTION_KEY must be exactly ${KEY_LENGTH * 2} hex characters. ` +
+      `Current length: ${key.length} characters. ` +
+      'Generate a new key with: node -e "console.log(crypto.randomBytes(32).toString(\'hex\'))"'
+    );
+  }
+  
+  // Check if the key is in hex format
+  if (!isHexString(key)) {
+    // Check if it might be base64 encoded
+    if (isBase64(key)) {
+      console.error('[Encryption] ERROR: TOKEN_ENCRYPTION_KEY appears to be base64 encoded');
+      console.error('[Encryption] ERROR: The key MUST be a 64-character hexadecimal string, not base64');
+      console.error('[Encryption] ERROR: Generate a proper hex key with: node -e "console.log(crypto.randomBytes(32).toString(\'hex\'))"');
+      throw new Error(
+        'TOKEN_ENCRYPTION_KEY must be a hexadecimal string (64 characters), not base64. ' +
+        'The key appears to be base64 encoded. ' +
+        'Generate a proper hex key with: node -e "console.log(crypto.randomBytes(32).toString(\'hex\'))"'
+      );
+    }
+    
+    console.error('[Encryption] ERROR: TOKEN_ENCRYPTION_KEY contains invalid characters');
+    console.error('[Encryption] ERROR: The key must contain only hexadecimal characters (0-9, a-f, A-F)');
+    throw new Error(
+      'TOKEN_ENCRYPTION_KEY must contain only hexadecimal characters (0-9, a-f, A-F). ' +
+      'Generate a new key with: node -e "console.log(crypto.randomBytes(32).toString(\'hex\'))"'
+    );
+  }
+  
   // Convert hex string to buffer
   const keyBuffer = Buffer.from(key, 'hex');
   
+  // Double-check buffer length (should be guaranteed by previous checks, but verify for security)
   if (keyBuffer.length !== KEY_LENGTH) {
+    console.error(`[Encryption] ERROR: Key buffer length mismatch. Expected ${KEY_LENGTH} bytes, got ${keyBuffer.length} bytes`);
     throw new Error(
-      `TOKEN_ENCRYPTION_KEY must be ${KEY_LENGTH} bytes (${KEY_LENGTH * 2} hex characters). ` +
-      `Current length: ${keyBuffer.length} bytes. ` +
+      `TOKEN_ENCRYPTION_KEY buffer conversion failed. Expected ${KEY_LENGTH} bytes, got ${keyBuffer.length} bytes. ` +
       'Generate a new key with: node -e "console.log(crypto.randomBytes(32).toString(\'hex\'))"'
     );
   }
