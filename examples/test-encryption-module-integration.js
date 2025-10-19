@@ -16,10 +16,7 @@ async function testEncryptionModule(testName, envKey, expectedSuccess) {
   console.log(`\n--- ${testName} ---`);
   
   // Create a test Node.js script that validates the encryption key
-  // Use JSON.stringify to properly escape the key value
   const testScript = `
-    process.env.TOKEN_ENCRYPTION_KEY = ${JSON.stringify(envKey)};
-    
     // Simulate module import and validation
     try {
       console.log('Attempting to validate key...');
@@ -57,9 +54,13 @@ async function testEncryptionModule(testName, envKey, expectedSuccess) {
   `;
   
   return new Promise((resolve) => {
-    // Spawn node process and pipe the script to stdin
+    // Spawn node process with environment variable set securely
     const nodeProcess = spawn('node', ['-'], {
-      timeout: 5000
+      timeout: 5000,
+      env: {
+        ...process.env,
+        TOKEN_ENCRYPTION_KEY: envKey
+      }
     });
     
     let stdout = '';
