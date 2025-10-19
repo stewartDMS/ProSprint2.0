@@ -6,9 +6,7 @@
  */
 
 const crypto = require('crypto');
-const { exec } = require('child_process');
-const util = require('util');
-const execPromise = util.promisify(exec);
+const { spawn } = require('child_process');
 
 console.log('='.repeat(70));
 console.log('ENCRYPTION MODULE INTEGRATION TEST');
@@ -17,11 +15,12 @@ console.log('='.repeat(70));
 async function testEncryptionModule(testName, envKey, expectedSuccess) {
   console.log(`\n--- ${testName} ---`);
   
-  // Create a test Node.js script that imports the encryption module
+  // Create a test Node.js script that validates the encryption key
+  // Use JSON.stringify to properly escape the key value
   const testScript = `
-    process.env.TOKEN_ENCRYPTION_KEY = '${envKey}';
+    process.env.TOKEN_ENCRYPTION_KEY = ${JSON.stringify(envKey)};
     
-    // Simulate module import
+    // Simulate module import and validation
     try {
       console.log('Attempting to validate key...');
       
@@ -57,29 +56,54 @@ async function testEncryptionModule(testName, envKey, expectedSuccess) {
     }
   `;
   
-  try {
-    const { stdout, stderr } = await execPromise(`node -e "${testScript}"`, {
+  return new Promise((resolve) => {
+    // Spawn node process and pipe the script to stdin
+    const nodeProcess = spawn('node', ['-'], {
       timeout: 5000
     });
     
-    if (expectedSuccess) {
-      console.log('✓ Test passed - validation succeeded as expected');
-      console.log('  Output:', stdout.trim());
-    } else {
-      console.error('✗ Test failed - validation should have failed but succeeded');
-      console.log('  Output:', stdout.trim());
-    }
-    return expectedSuccess;
-  } catch (error) {
-    if (!expectedSuccess) {
-      console.log('✓ Test passed - validation failed as expected');
-      console.log('  Error:', error.stdout?.trim() || error.stderr?.trim() || error.message);
-    } else {
-      console.error('✗ Test failed - validation should have succeeded but failed');
-      console.error('  Error:', error.stdout?.trim() || error.stderr?.trim() || error.message);
-    }
-    return !expectedSuccess;
-  }
+    let stdout = '';
+    let stderr = '';
+    
+    nodeProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+    
+    nodeProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+    
+    nodeProcess.on('close', (code) => {
+      const success = code === 0;
+      
+      if (success && expectedSuccess) {
+        console.log('✓ Test passed - validation succeeded as expected');
+        console.log('  Output:', stdout.trim());
+        resolve(true);
+      } else if (!success && !expectedSuccess) {
+        console.log('✓ Test passed - validation failed as expected');
+        console.log('  Error:', stdout.trim() || stderr.trim());
+        resolve(true);
+      } else if (success && !expectedSuccess) {
+        console.error('✗ Test failed - validation should have failed but succeeded');
+        console.log('  Output:', stdout.trim());
+        resolve(false);
+      } else {
+        console.error('✗ Test failed - validation should have succeeded but failed');
+        console.error('  Error:', stdout.trim() || stderr.trim());
+        resolve(false);
+      }
+    });
+    
+    nodeProcess.on('error', (error) => {
+      console.error('✗ Test execution error:', error.message);
+      resolve(false);
+    });
+    
+    // Write script to stdin and close
+    nodeProcess.stdin.write(testScript);
+    nodeProcess.stdin.end();
+  });
 }
 
 async function runTests() {
