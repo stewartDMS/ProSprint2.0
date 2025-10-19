@@ -24,6 +24,7 @@ const AUTH_TAG_LENGTH = 16; // 128-bit authentication tag
 const KEY_LENGTH = 32; // 256-bit key
 
 // Debug logging: Log encryption key availability at application startup
+// This helps diagnose issues with environment variable configuration in production
 console.log('[Encryption] Environment variables status at startup:');
 console.log(`[Encryption] TOKEN_ENCRYPTION_KEY available: ${!!process.env.TOKEN_ENCRYPTION_KEY}`);
 console.log(`[Encryption] ENCRYPTION_KEY available: ${!!process.env.ENCRYPTION_KEY}`);
