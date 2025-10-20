@@ -165,6 +165,16 @@ export default async function handler(
       timestamp: new Date().toISOString(),
     });
     
+    // Log encryption key availability before attempting token storage
+    const tokenEncryptionKey = process.env.TOKEN_ENCRYPTION_KEY;
+    const encryptionKey = process.env.ENCRYPTION_KEY;
+    console.log('[Gmail OAuth Callback] Encryption key status before token storage:', {
+      TOKEN_ENCRYPTION_KEY: tokenEncryptionKey ? `Present (length: ${tokenEncryptionKey.length})` : 'MISSING',
+      ENCRYPTION_KEY: encryptionKey ? `Present (length: ${encryptionKey.length})` : 'MISSING',
+      using_key: tokenEncryptionKey ? 'TOKEN_ENCRYPTION_KEY' : (encryptionKey ? 'ENCRYPTION_KEY' : 'NONE'),
+      timestamp: new Date().toISOString(),
+    });
+    
     // Store token in encrypted PostgreSQL database
     await storeToken('gmail', userId, {
       access_token: tokenData.access_token,
