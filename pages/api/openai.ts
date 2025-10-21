@@ -1,5 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+// Startup logging for OpenAI API configuration
+console.log('[OpenAI] ========================================');
+console.log('[OpenAI] OpenAI API Configuration Check');
+console.log('[OpenAI] ========================================');
+const openaiKeyPresent = !!process.env.OPENAI_API_KEY;
+console.log(`[OpenAI] OPENAI_API_KEY present: ${openaiKeyPresent}`);
+if (openaiKeyPresent) {
+  const keyLength = process.env.OPENAI_API_KEY?.length || 0;
+  console.log(`[OpenAI] Key length: ${keyLength} characters`);
+  console.log('[OpenAI] ✓ OpenAI API key configured - AI features enabled');
+} else {
+  console.log('[OpenAI] ⚠ No OpenAI API key - running in DEMO mode');
+  console.log('[OpenAI] Set OPENAI_API_KEY environment variable to enable AI features');
+}
+console.log('[OpenAI] ========================================');
+
 interface OpenAIMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
