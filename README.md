@@ -1253,6 +1253,11 @@ This is the recommended production architecture for ProSprint 2.0:
    # Recommended for production CORS
    ALLOWED_ORIGINS=https://your-app.vercel.app
    
+   # Optional: For split frontend/backend deployments
+   # If your backend API is deployed separately on Render, set this to the backend URL
+   # Leave empty if frontend and API routes are on the same domain (standard Vercel deployment)
+   NEXT_PUBLIC_API_BASE_URL=https://your-backend-app.onrender.com
+   
    # Optional: Integration credentials (see Integration Setup section)
    GOOGLE_CLIENT_ID=...
    GOOGLE_CLIENT_SECRET=...
@@ -1293,6 +1298,42 @@ After deployment, update all OAuth app configurations with your production URLs:
 3. **Other OAuth Integrations**:
    - Update redirect URIs for HubSpot, Salesforce, Xero, Notion, Asana, Jira, Slack
    - Format: `https://your-app.vercel.app/api/integrations/{service}/callback`
+
+### Alternative: Split Frontend/Backend Deployment
+
+If you need to deploy the frontend and backend API separately (e.g., frontend on Vercel, backend API on Render), follow these additional steps:
+
+#### Backend on Render Setup
+
+1. **Deploy Backend to Render**:
+   - Create a new Web Service on Render
+   - Connect your GitHub repository
+   - Configure build settings:
+     - **Build Command**: `npm install && npm run build`
+     - **Start Command**: `npm start`
+   - Set environment variables:
+     ```bash
+     OPENAI_API_KEY=sk-your_openai_api_key
+     DATABASE_URL=postgresql://user:password@hostname:port/database
+     TOKEN_ENCRYPTION_KEY=your_64_char_hex_key_here
+     NEXT_PUBLIC_BASE_URL=https://your-frontend.vercel.app
+     ```
+
+2. **Configure Frontend to Use Render Backend**:
+   - In Vercel environment variables, add:
+     ```bash
+     NEXT_PUBLIC_API_BASE_URL=https://your-backend-app.onrender.com
+     ```
+   - This will route all API calls from the PromptBox and integrations to the Render backend
+
+3. **Update CORS Settings**:
+   - Ensure your backend allows requests from your frontend domain
+   - Set `ALLOWED_ORIGINS` in Render:
+     ```bash
+     ALLOWED_ORIGINS=https://your-frontend.vercel.app
+     ```
+
+**Note**: The standard deployment (Vercel hosting both frontend and API routes) is simpler and recommended for most use cases. Use split deployment only if you have specific requirements for separate backend hosting.
 
 ### Health Check and Monitoring
 
