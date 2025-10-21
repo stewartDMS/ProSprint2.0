@@ -1082,6 +1082,362 @@ To get an OpenAI API key:
 
 **Security Note:** The API key is only accessible server-side through the `/api/openai` endpoint, ensuring your credentials are never exposed to the browser.
 
+## Production Deployment Guide
+
+This section provides comprehensive instructions for deploying ProSprint 2.0 in production with proper security configurations.
+
+### Required Environment Variables
+
+ProSprint 2.0 requires several environment variables for full functionality. All variables should be configured in your deployment platform (Vercel, Render, etc.).
+
+#### Critical Environment Variables
+
+These are **required** for the application to function properly in production:
+
+##### 1. OPENAI_API_KEY (Required for AI Features)
+
+```bash
+OPENAI_API_KEY=sk-...your_openai_api_key
+```
+
+- **Purpose**: Enables AI-powered prompt processing and automation suggestions
+- **Format**: OpenAI API key starting with `sk-`
+- **Where to get it**: [OpenAI Platform](https://platform.openai.com/api-keys)
+- **Validation**: Checked at startup; logs presence and key length
+- **Behavior without**: Application runs in demo mode with simulated AI responses
+
+##### 2. TOKEN_ENCRYPTION_KEY or ENCRYPTION_KEY (Required for OAuth)
+
+```bash
+TOKEN_ENCRYPTION_KEY=a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456
+```
+
+- **Purpose**: Encrypts OAuth tokens for secure storage in the database
+- **Format**: Exactly 64 hexadecimal characters (0-9, a-f, A-F)
+- **IMPORTANT**: Must be hex format, NOT base64
+- **Generate with**: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+- **Validation**: Validated at startup with detailed format checking
+- **Behavior without**: OAuth integrations (Gmail, Outlook, etc.) will fail
+- **Legacy support**: `ENCRYPTION_KEY` is supported for backwards compatibility, but `TOKEN_ENCRYPTION_KEY` is preferred
+
+**Key Format Requirements:**
+- ✅ Valid: `a1b2c3d4e5f6...` (64 hex characters)
+- ❌ Invalid: Base64 encoded strings
+- ❌ Invalid: Keys shorter or longer than 64 characters
+- ❌ Invalid: Keys with non-hexadecimal characters
+
+##### 3. DATABASE_URL (Required for Token Persistence)
+
+```bash
+DATABASE_URL=postgresql://user:password@hostname:5432/dbname?schema=public
+```
+
+- **Purpose**: PostgreSQL database for persistent, encrypted token storage
+- **Format**: PostgreSQL connection string
+- **Where to get it**: 
+  - [Render.com](https://render.com/) - Free PostgreSQL tier available
+  - [Neon](https://neon.tech/) - Serverless PostgreSQL
+  - [Supabase](https://supabase.com/) - PostgreSQL with additional features
+- **Validation**: Checked at startup for presence and PostgreSQL format
+- **Behavior without**: OAuth tokens cannot be persisted between restarts
+
+##### 4. NEXT_PUBLIC_BASE_URL (Required for OAuth Callbacks)
+
+```bash
+NEXT_PUBLIC_BASE_URL=https://your-vercel-app.vercel.app
+```
+
+- **Purpose**: Base URL for OAuth callback redirects
+- **Format**: Full HTTPS URL of your deployed application
+- **Example**: `https://pro-sprint-ai.vercel.app`
+- **Important**: Must match the redirect URIs configured in OAuth app settings
+- **Validation**: Used in CORS configuration and OAuth flows
+
+#### Optional Environment Variables
+
+##### CORS Configuration
+
+```bash
+# Comma-separated list of allowed origins
+ALLOWED_ORIGINS=https://your-vercel-app.vercel.app,https://custom-domain.com
+```
+
+- **Purpose**: Restricts API access to specific frontend domains for security
+- **Format**: Comma-separated list of full HTTPS URLs
+- **Default behavior**: If not set, falls back to `NEXT_PUBLIC_BASE_URL`, then allows all origins (`*`)
+- **Recommended for production**: Set explicitly to prevent unauthorized API access
+- **Example**: `ALLOWED_ORIGINS=https://your-app.vercel.app`
+
+### Vercel + Render Split Deployment
+
+This is the recommended production architecture for ProSprint 2.0:
+
+#### Architecture Overview
+
+```
+┌─────────────────┐         ┌──────────────────┐
+│                 │         │                  │
+│  Vercel         │────────▶│  Render.com      │
+│  (Frontend +    │  API    │  (PostgreSQL)    │
+│   API Routes)   │ Calls   │                  │
+│                 │         │                  │
+└─────────────────┘         └──────────────────┘
+```
+
+- **Vercel**: Hosts the Next.js frontend and API routes (both TypeScript and Python)
+- **Render**: Hosts the PostgreSQL database for token storage
+
+#### Step 1: Set Up PostgreSQL Database on Render
+
+1. **Create Render Account**:
+   - Go to [render.com](https://render.com/)
+   - Sign up for a free account
+
+2. **Create PostgreSQL Database**:
+   - Click "New +" → "PostgreSQL"
+   - Configure database:
+     - **Name**: `prosprint-db` (or your preferred name)
+     - **Database**: `prosprint`
+     - **User**: Auto-generated or custom
+     - **Region**: Choose closest to your users
+     - **Plan**: Free tier is sufficient for development/small production
+   - Click "Create Database"
+
+3. **Get Database Connection String**:
+   - Once created, find the "External Database URL" in the database dashboard
+   - Copy the connection string (format: `postgresql://user:password@hostname:port/database`)
+   - **Important**: Use the **External Database URL**, not Internal
+
+4. **Initialize Database Schema**:
+   ```bash
+   # Set DATABASE_URL locally
+   export DATABASE_URL="postgresql://user:password@hostname:port/database"
+   
+   # Run Prisma migrations
+   npx prisma migrate deploy
+   ```
+
+#### Step 2: Deploy to Vercel
+
+1. **Prepare Repository**:
+   ```bash
+   git add .
+   git commit -m "Production deployment configuration"
+   git push origin main
+   ```
+
+2. **Connect to Vercel**:
+   - Go to [vercel.com](https://vercel.com/)
+   - Click "Import Project"
+   - Connect your GitHub repository
+   - Select the repository
+   - Vercel auto-detects Next.js configuration
+
+3. **Configure Environment Variables**:
+   - In Vercel dashboard: Settings → Environment Variables
+   - Add all required variables:
+
+   ```bash
+   # Required for AI
+   OPENAI_API_KEY=sk-your_openai_api_key
+   
+   # Required for OAuth (generate new key!)
+   TOKEN_ENCRYPTION_KEY=your_64_char_hex_key_here
+   
+   # Required for token persistence (from Render)
+   DATABASE_URL=postgresql://user:password@hostname:port/database
+   
+   # Required for OAuth callbacks (your Vercel domain)
+   NEXT_PUBLIC_BASE_URL=https://your-app.vercel.app
+   
+   # Recommended for production CORS
+   ALLOWED_ORIGINS=https://your-app.vercel.app
+   
+   # Optional: Integration credentials (see Integration Setup section)
+   GOOGLE_CLIENT_ID=...
+   GOOGLE_CLIENT_SECRET=...
+   MICROSOFT_CLIENT_ID=...
+   MICROSOFT_CLIENT_SECRET=...
+   # ... other integrations
+   ```
+
+4. **Deploy**:
+   - Click "Deploy"
+   - Vercel will build and deploy your application
+   - Monitor build logs for any errors
+
+5. **Verify Deployment**:
+   - Visit your deployed URL: `https://your-app.vercel.app`
+   - Check health endpoint: `https://your-app.vercel.app/api/health`
+   - Verify environment variables are loaded correctly
+
+#### Step 3: Update OAuth Redirect URIs
+
+After deployment, update all OAuth app configurations with your production URLs:
+
+1. **Google OAuth** (Drive, Gmail):
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Navigate to your project → Credentials
+   - Edit OAuth 2.0 Client ID
+   - Add authorized redirect URIs:
+     - `https://your-app.vercel.app/api/integrations/google/callback`
+     - `https://your-app.vercel.app/api/integrations/email/callback/gmail`
+
+2. **Microsoft OAuth** (Outlook):
+   - Go to [Azure Portal](https://portal.azure.com/)
+   - Navigate to App registrations → Your app → Authentication
+   - Add redirect URI:
+     - `https://your-app.vercel.app/api/integrations/email/callback/microsoft`
+     - `https://your-app.vercel.app/api/integrations/outlook/callback`
+
+3. **Other OAuth Integrations**:
+   - Update redirect URIs for HubSpot, Salesforce, Xero, Notion, Asana, Jira, Slack
+   - Format: `https://your-app.vercel.app/api/integrations/{service}/callback`
+
+### Health Check and Monitoring
+
+#### Health Check Endpoint
+
+ProSprint 2.0 includes a health check endpoint for monitoring and troubleshooting:
+
+**GET** `/api/health`
+
+Returns JSON with:
+- Overall status: `healthy`, `warning`, or `error`
+- Environment variable presence and validation
+- Configuration warnings and errors
+
+**Example Response:**
+
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "environment": {
+    "variables": [
+      {
+        "name": "OPENAI_API_KEY",
+        "present": true,
+        "valid": true,
+        "length": 51
+      },
+      {
+        "name": "TOKEN_ENCRYPTION_KEY",
+        "present": true,
+        "valid": true,
+        "length": 64,
+        "format": "64-char hex"
+      },
+      {
+        "name": "DATABASE_URL",
+        "present": true,
+        "valid": true,
+        "format": "PostgreSQL"
+      }
+    ]
+  },
+  "warnings": [],
+  "errors": []
+}
+```
+
+**Use Cases:**
+- **Deployment verification**: Check immediately after deployment
+- **Troubleshooting**: Diagnose configuration issues
+- **Monitoring**: Set up automated health checks
+- **CI/CD**: Validate deployments in pipeline
+
+#### Startup Logging
+
+ProSprint 2.0 logs critical information at startup:
+
+**Environment Variable Validation:**
+```
+[Encryption] ========================================
+[Encryption] Encryption Module Startup Validation
+[Encryption] ========================================
+[Encryption] TOKEN_ENCRYPTION_KEY available: true
+[Encryption] Key length: 64 characters
+[Encryption] Expected: 64 characters (64 hex chars for 32 bytes)
+[Encryption] ✓ Encryption key validation PASSED
+[Encryption] ========================================
+
+[OpenAI] ========================================
+[OpenAI] OpenAI API Configuration Check
+[OpenAI] ========================================
+[OpenAI] OPENAI_API_KEY present: true
+[OpenAI] Key length: 51 characters
+[OpenAI] ✓ OpenAI API key configured - AI features enabled
+[OpenAI] ========================================
+```
+
+**CORS Configuration:**
+```
+[Next.js Config] CORS configuration:
+[Next.js Config] Allowed origins: https://your-app.vercel.app
+```
+
+**View Logs:**
+- **Vercel**: Dashboard → Your Project → Deployments → View Function Logs
+- **Local**: Terminal output when running `npm run dev`
+
+### Troubleshooting
+
+#### Common Issues
+
+**1. "Encryption key validation FAILED"**
+- **Cause**: `TOKEN_ENCRYPTION_KEY` or `ENCRYPTION_KEY` is missing or invalid format
+- **Solution**: 
+  - Generate new key: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+  - Ensure exactly 64 hex characters
+  - Set in Vercel environment variables
+  - Redeploy
+
+**2. "OAuth token storage will not work"**
+- **Cause**: `DATABASE_URL` not configured or Prisma schema not migrated
+- **Solution**:
+  - Set up PostgreSQL database on Render
+  - Add `DATABASE_URL` to Vercel environment variables
+  - Run migrations: `npx prisma migrate deploy`
+  - Redeploy
+
+**3. "OpenAI API error" or Demo Mode**
+- **Cause**: `OPENAI_API_KEY` not configured or invalid
+- **Solution**:
+  - Get API key from [OpenAI Platform](https://platform.openai.com/)
+  - Add to Vercel environment variables
+  - Redeploy
+
+**4. "CORS error" when accessing API**
+- **Cause**: Frontend domain not in `ALLOWED_ORIGINS`
+- **Solution**:
+  - Set `ALLOWED_ORIGINS` to your Vercel domain
+  - Or set `NEXT_PUBLIC_BASE_URL` as fallback
+  - Redeploy
+
+**5. OAuth redirects not working**
+- **Cause**: Redirect URIs not updated in OAuth app settings
+- **Solution**:
+  - Update OAuth app redirect URIs to production domain
+  - Ensure `NEXT_PUBLIC_BASE_URL` matches your deployment URL
+  - Clear browser cache and try again
+
+#### Checking Health Status
+
+1. **Via Browser**:
+   - Visit `https://your-app.vercel.app/api/health`
+   - Review JSON response for any warnings or errors
+
+2. **Via curl**:
+   ```bash
+   curl https://your-app.vercel.app/api/health | jq
+   ```
+
+3. **Automated Monitoring**:
+   - Set up uptime monitoring with Vercel's built-in monitoring
+   - Use external services like UptimeRobot or Pingdom
+   - Configure alerts for health check failures
+
 ## Key Features
 
 ### Frontend (Next.js + React)
