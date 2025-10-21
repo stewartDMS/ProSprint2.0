@@ -1,6 +1,12 @@
 from http.server import BaseHTTPRequestHandler
 import json
 from datetime import datetime
+import sys
+import os
+
+# Add the api directory to the path to import utils
+sys.path.insert(0, os.path.dirname(__file__))
+from utils.cors import set_cors_headers
 
 class handler(BaseHTTPRequestHandler):
     """
@@ -12,7 +18,7 @@ class handler(BaseHTTPRequestHandler):
         # Set response headers
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
+        set_cors_headers(self)
         self.end_headers()
         
         # Get list of active triggers
@@ -45,7 +51,7 @@ class handler(BaseHTTPRequestHandler):
         # Set response headers
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
+        set_cors_headers(self)
         self.end_headers()
         
         # Process trigger creation/update
@@ -71,7 +77,7 @@ class handler(BaseHTTPRequestHandler):
         # Set response headers
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
+        set_cors_headers(self)
         self.end_headers()
         
         # Parse query string for trigger ID
@@ -90,9 +96,7 @@ class handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         # Handle CORS preflight
         self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        set_cors_headers(self)
         self.end_headers()
         return
     
