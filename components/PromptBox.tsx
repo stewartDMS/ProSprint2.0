@@ -13,6 +13,19 @@ export default function PromptBox() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Get API base URL from environment variable or use relative path
+  const getApiUrl = (endpoint: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    if (baseUrl) {
+      // Remove trailing slash from base URL and leading slash from endpoint if present
+      const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+      const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      return `${cleanBaseUrl}${cleanEndpoint}`;
+    }
+    // Use relative URL for same-origin requests
+    return endpoint;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim() || loading) return;
@@ -35,7 +48,8 @@ export default function PromptBox() {
       const automationTriggered = await tryAutomation(currentPrompt);
 
       // Call our secure API route which handles OpenAI requests server-side
-      const response = await fetch('/api/openai', {
+      const apiUrl = getApiUrl('/api/openai');
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -249,7 +263,8 @@ export default function PromptBox() {
     
     try {
       // Call the integration endpoint directly
-      const response = await fetch(`/api/integrations/${integration}`, {
+      const apiUrl = getApiUrl(`/api/integrations/${integration}`);
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
