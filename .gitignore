@@ -94,7 +94,6 @@ Thumbs.db
 /generated/prisma
 
 # Prisma
-/prisma/migrations
 .env.test
 
 # TypeScript build info
